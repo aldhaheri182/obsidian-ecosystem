@@ -1,7 +1,7 @@
 # aletheia-core: Rust container hosting collector-equities-csv + risk-overlord
 # as supervised agents (one tokio runtime, per ADR 0002).
 
-FROM rust:1.82-slim AS build
+FROM rust:1.85-slim AS build
 WORKDIR /build
 RUN apt-get update && apt-get install -y --no-install-recommends \
       protobuf-compiler pkg-config libssl-dev libclang-dev clang && \

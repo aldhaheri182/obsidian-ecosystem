@@ -2,6 +2,6 @@
 # Authorized by: spec Part 1.4.
 
 [toolchain]
-channel = "1.82"
+channel = "1.85"
 components = ["rustfmt", "clippy"]
 profile = "minimal"
