@@ -1,0 +1,59 @@
+// ============================================================================
+// proto/signal.proto
+//
+// Alpha signal wire format.
+// Authorized by: spec Part 22.2 and §9.3 (Aletheia Signal agents).
+//
+// A Signal is a *hypothesis*, not an order. It carries a directional view, a
+// confidence, an expected holding horizon, and — critically — a rationale and
+// a list of causal ledger entries that led to it. Causal links make every
+// signal falsifiable: the Causal Auditor (Mnemosyne, M1+) can walk the chain
+// and verify whether the claimed antecedents actually predict the outcome.
+//
+// Topics:
+//   - per-agent:    `aletheia.trading_floor.{lab}.{signal_type}.alpha`
+//   - blended:      `aletheia.portfolio.blended_alpha`
+// ============================================================================
+
+syntax = "proto3";
+package obsidian;
+
+option go_package = "github.com/aldhaheri182/obsidian-ecosystem/proto/obsidian";
+
+message Signal {
+  // Publisher agent_id (e.g. "momentum-signal-01").
+  string agent_id = 1;
+
+  // Uppercase symbol.
+  string symbol = 2;
+
+  // Free-form type tag. Canonical values (extend as agents are added):
+  //   "MOMENTUM", "MEAN_REVERSION", "CARRY", "VOL_ARB", "STAT_ARB",
+  //   "SENTIMENT", "FLOW", "BLENDED".
+  string signal_type = 3;
+
+  // +1 = long / buy, -1 = short / sell, 0 = flat / no position.
+  int32 direction = 4;
+
+  // Publisher's self-assessed confidence in [0.0, 1.0]. Consumers SHALL NOT
+  // treat this as a probability without calibration — signal agents report
+  // calibration metrics separately in their daily Reflection.
+  double confidence = 5;
+
+  // Canonical horizons: "INTRADAY", "SHORT_TERM", "MEDIUM_TERM", "LONG_TERM".
+  string horizon = 6;
+
+  // Expected holding period in calendar days. 0 = intraday round-trip.
+  int32 expected_holding_days = 7;
+
+  // Natural-language rationale. Short, human-readable. Used by the UI
+  // tooltip, the executive narrative synthesizer, and post-mortem review.
+  string rationale = 8;
+
+  // Ledger entry_ids of observations and inferences that causally led to
+  // this signal. MUST be non-empty for any signal with confidence > 0.
+  repeated string causal_links = 9;
+
+  // Semantic version of the producing model (e.g. "sma_crossover-0.1.0").
+  string model_version = 10;
+}

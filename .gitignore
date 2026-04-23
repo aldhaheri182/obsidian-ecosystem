@@ -1,0 +1,66 @@
+# Obsidian Ecosystem — .gitignore
+# Authorized by spec Part 2 (Repository Structure).
+
+# Rust
+target/
+Cargo.lock.bak
+*.rs.bk
+**/*.rs.bk
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.env
+.env.local
+.env.*.local
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# Node / Svelte / Vite
+node_modules/
+.svelte-kit/
+.vite/
+visualization/dist/
+*.log
+
+# Data & runtime
+ledger-data/
+rocksdb-data/
+clickhouse-data/
+redis-data/
+nats-data/
+**/data/
+!tests/fixtures/
+
+# Protobuf generated
+**/*_pb2.py
+**/*_pb2.pyi
+**/*_pb2_grpc.py
+core/obsidian-bus/src/generated/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Secrets (never commit)
+*.key
+*.pem
+*.crt
+secrets/
+!secrets/.gitkeep
+
+# Local overrides
+docker-compose.override.yml

@@ -1,0 +1,60 @@
+// ============================================================================
+// proto/heartbeat.proto
+//
+// Agent heartbeat wire format.
+// Authorized by: spec Part 0.2 (global acceptance criterion #1) and M0 plan
+// §"Acceptance tests" #4 (Heartbeat ring).
+//
+// Every ObsidianAgent publishes a Heartbeat on `system.heartbeat.{agent_id}`
+// at 1 Hz. The Tape captures them all; the UI renders the heartbeat ring
+// indicator from them; the Iris city (M6+) will use them for SLO scoring.
+//
+// Missing heartbeats for >5 s trigger an Alert via the Iris Alert Dispatcher
+// (in M0, this is logged only — no Iris yet).
+// ============================================================================
+
+syntax = "proto3";
+package obsidian;
+
+option go_package = "github.com/aldhaheri182/obsidian-ecosystem/proto/obsidian";
+
+message Heartbeat {
+  // The agent that is alive.
+  string agent_id = 1;
+
+  // The agent's city. For M0, always "aletheia" for trading agents,
+  // "chronos" for the time oracle, "system" for infrastructure.
+  string city = 2;
+
+  // The role this agent fulfills (e.g. "momentum-signal", "risk-overlord",
+  // "collector-equities-csv", "paper-executor").
+  string role = 3;
+
+  Status status = 4;
+
+  // Seconds since the agent's current boot. Resets on supervisor restart
+  // (which is WHY we care about this: a rapidly-incrementing uptime
+  // punctuated by frequent resets signals a crash loop).
+  uint64 uptime_seconds = 5;
+
+  // Count of messages this agent has published since boot. Useful as a
+  // liveness proxy that is harder to fake than the heartbeat itself.
+  uint64 messages_published = 6;
+
+  // SHA3-256 hex of the head of this agent's ledger. Allows external
+  // observers to verify that the agent is extending its chain rather than
+  // replaying a stale one. 64 hex chars; empty string if the ledger has no
+  // entries yet (genesis pending).
+  string ledger_head_hash = 7;
+}
+
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_ACTIVE = 1;     // processing messages normally
+  STATUS_DEGRADED = 2;   // processing but with known issues (e.g. stale data)
+  STATUS_ERROR = 3;      // failing, awaiting supervisor restart
+  STATUS_SLEEPING = 4;   // paused (off-hours, or awaiting event)
+  STATUS_DREAMING = 5;   // in Prometheus Dream Room (M5+)
+  STATUS_PROBATION = 6;  // recently resurrected, under elevated scrutiny
+  STATUS_RETIRED = 7;    // decommissioned; ledger preserved
+}

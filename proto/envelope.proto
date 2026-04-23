@@ -1,0 +1,109 @@
+// ============================================================================
+// proto/envelope.proto
+//
+// The Obsidian Ecosystem — message envelope.
+// Authorized by: spec Part 4.2 (Protobuf Envelope) and M0 plan §"Message bus".
+//
+// Every inter-agent message on NATS is serialized as an `Envelope`. The
+// `payload` field carries a per-type Protobuf message (see the other files in
+// this directory). The `signature` is Ed25519 over the canonical serialization
+// of fields 1–12 (everything except `signature` itself). `nonce` is 16 random
+// bytes included under the signature so that replay attacks across sessions
+// fail verification even if the rest of the envelope is identical.
+//
+// Topic naming: see docs/decisions/0004-topic-naming.md.
+// ============================================================================
+
+syntax = "proto3";
+package obsidian;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/aldhaheri182/obsidian-ecosystem/proto/obsidian";
+
+// Envelope wraps every message on the NATS bus.
+message Envelope {
+  // UUID v7 (RFC 9562). Unique per publication; never reused.
+  string message_id = 1;
+
+  // If this message is part of a request/response chain, `correlation_id`
+  // carries the originating message_id. Empty string for unsolicited
+  // publications.
+  string correlation_id = 2;
+
+  // The agent_id of the publisher (e.g. "momentum-signal-01").
+  string source_agent_id = 3;
+
+  // City scope of the publisher (e.g. "aletheia"). Matches the first
+  // component of `target_topic` when the message is published within a city.
+  string source_city = 4;
+
+  // Target topic, matching docs/decisions/0004-topic-naming.md.
+  // Included in the envelope for tamper-evidence — a subscriber that receives
+  // the message on a topic inconsistent with this field should reject it.
+  string target_topic = 5;
+
+  // Publisher's wall-clock at publication time. Subscribers SHALL NOT trust
+  // this for causal ordering — use `chronos.time.oracle` HLC timestamps for
+  // that purpose.
+  google.protobuf.Timestamp timestamp = 6;
+
+  Priority priority = 7;
+  MessageType type = 8;
+
+  // Serialized payload. The decoder selects the per-type Protobuf message
+  // based on `type`. An empty payload is valid for HEARTBEAT where the
+  // envelope fields themselves carry enough information.
+  bytes payload = 9;
+
+  // message_ids of prior messages that causally contributed to this one.
+  // This is the on-the-wire counterpart to the ledger's `causal_links`.
+  repeated string causal_message_ids = 10;
+
+  // Semantic version of the *payload* schema, not the envelope schema.
+  // Envelope schema changes are handled by Protobuf field number stability.
+  string schema_version = 11;
+
+  // 16 random bytes generated per publication. Covered by the signature.
+  // Used to make replay of a captured envelope on a different NATS cluster
+  // or session detectable.
+  bytes nonce = 12;
+
+  // Ed25519 signature over the canonical proto serialization of fields 1–12.
+  // See core/obsidian-bus/src/signing.rs for the canonicalization routine.
+  bytes signature = 13;
+}
+
+enum Priority {
+  PRIORITY_LOW = 0;
+  PRIORITY_NORMAL = 1;
+  PRIORITY_HIGH = 2;
+  PRIORITY_CRITICAL = 3;
+}
+
+// MessageType discriminates the contents of `Envelope.payload`.
+//
+// NOTE on ordering: new types MUST be appended. Do not renumber. The Tape
+// Recorder persists the integer value directly, and renumbering would
+// invalidate historical replays.
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  MESSAGE_TYPE_MARKET_DATA = 1;
+  MESSAGE_TYPE_SIGNAL = 2;
+  MESSAGE_TYPE_ORDER_REQUEST = 3;
+  MESSAGE_TYPE_FILL_REPORT = 4;
+  MESSAGE_TYPE_RISK_OVERRIDE = 5;
+  MESSAGE_TYPE_HEARTBEAT = 6;
+  MESSAGE_TYPE_EXECUTIVE_DIRECTIVE = 7;
+  MESSAGE_TYPE_EXECUTIVE_REPORT = 8;
+  MESSAGE_TYPE_KNOWLEDGE_PUBLICATION = 9;
+  MESSAGE_TYPE_ADVANCEMENT_ORB = 10;
+  MESSAGE_TYPE_ALERT = 11;
+  MESSAGE_TYPE_QUERY = 12;
+  MESSAGE_TYPE_QUERY_RESPONSE = 13;
+  MESSAGE_TYPE_REFLECTION = 14;
+  MESSAGE_TYPE_DREAM_RESULT = 15;
+  MESSAGE_TYPE_INTERNAL_TOKEN_TRANSFER = 16;
+  MESSAGE_TYPE_PHYSICAL_ACTUATION = 17;
+  MESSAGE_TYPE_TIME_TICK = 18; // chronos.time.oracle HLC tick
+}

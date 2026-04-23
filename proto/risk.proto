@@ -1,0 +1,49 @@
+// ============================================================================
+// proto/risk.proto
+//
+// Risk override messages.
+// Authorized by: spec Part 22.5 and §9.7 (Aletheia Guardian agents).
+//
+// The Risk Overlord is the only authorized publisher on `risk.override.all`
+// in M0. The acceptance test in tests/integration/test_risk_latency.py
+// measures end-to-end latency from breach detection to override publication;
+// M0 passes only at p99 < 100 ms.
+// ============================================================================
+
+syntax = "proto3";
+package obsidian;
+
+option go_package = "github.com/aldhaheri182/obsidian-ecosystem/proto/obsidian";
+
+message RiskOverride {
+  // Nature of the override.
+  OverrideType override_type = 1;
+
+  // Only meaningful for override_type == SCALE. In [0.0, 1.0]. 0.5 means
+  // "reduce all open risk by 50 %". Ignored for other override types.
+  double scale_factor = 2;
+
+  // Human-readable reason for post-mortem review and UI display.
+  string reason = 3;
+
+  // agent_id of the Guardian that triggered the override.
+  string triggering_agent = 4;
+
+  // Optional: specific symbols affected. Empty = all symbols in the
+  // Overlord's scope.
+  repeated string symbols = 5;
+}
+
+enum OverrideType {
+  OVERRIDE_TYPE_UNSPECIFIED = 0;
+  // Scale all new orders down by `scale_factor`. Open positions unchanged.
+  OVERRIDE_TYPE_SCALE = 1;
+  // Cancel all working orders; do not submit new orders. Keep positions.
+  OVERRIDE_TYPE_PAUSE = 2;
+  // Kill a specific set of symbols: cancel working orders AND flatten
+  // positions in `symbols`.
+  OVERRIDE_TYPE_KILL_POSITIONS = 3;
+  // Flatten the entire book: cancel all working orders AND exit every
+  // position across every symbol. This is the M0 acceptance-test path.
+  OVERRIDE_TYPE_FLATTEN_ALL = 4;
+}

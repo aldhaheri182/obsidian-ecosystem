@@ -1,0 +1,7 @@
+# rust-toolchain.toml — pin the Rust toolchain for reproducible builds.
+# Authorized by: spec Part 1.4.
+
+[toolchain]
+channel = "1.82"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

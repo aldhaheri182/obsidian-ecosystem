@@ -1,0 +1,52 @@
+// ============================================================================
+// proto/market_data.proto
+//
+// Market data wire format.
+// Authorized by: spec Part 22.1, §9.2 (Aletheia Collector agents), and the
+// M0 plan §"Data flow".
+//
+// Producers: all collector agents (`collector-equities-*`, `collector-fx-*`,
+// `collector-futures-*`, `collector-options-*`, `collector-crypto-*`).
+// Topics:    `{city}.data.{asset_class}.{symbol}` — e.g.
+//            `aletheia.data.us_equities.AAPL`.
+// Consumers: all signal agents, the correlation monitor, the regime detector,
+//            and the Tape.
+//
+// Prices are doubles for ergonomics; order books and fills use explicit
+// integer ticks elsewhere where exactness matters.
+// ============================================================================
+
+syntax = "proto3";
+package obsidian;
+
+option go_package = "github.com/aldhaheri182/obsidian-ecosystem/proto/obsidian";
+
+message MarketData {
+  // Uppercase symbol as known to the exchange (e.g. "AAPL", "ES=F", "EURUSD").
+  string symbol = 1;
+
+  // Last trade price. For quote-only updates use `bid`/`ask` and set
+  // `price` to the midpoint. Producers SHALL document their convention.
+  double price = 2;
+
+  // Last trade volume (shares for equities, contracts for futures, notional
+  // units for FX). May be 0 for quote-only updates.
+  uint64 volume = 3;
+
+  // Top-of-book bid / ask, with sizes in the same unit as `volume`.
+  double bid = 4;
+  double ask = 5;
+  uint64 bid_size = 6;
+  uint64 ask_size = 7;
+
+  // Exchange of record. For consolidated tapes, use "CONSOLIDATED".
+  string exchange = 8;
+
+  // Vendor-specific trade condition codes (e.g. Polygon's "@", "T", "F").
+  // Consumers SHALL treat these as opaque filters, not semantic data.
+  repeated string conditions = 9;
+
+  // Nanoseconds since Unix epoch, from the exchange's published timestamp
+  // where available, otherwise the collector's wall clock.
+  uint64 timestamp_ns = 10;
+}
