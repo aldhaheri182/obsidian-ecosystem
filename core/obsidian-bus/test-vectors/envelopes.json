@@ -1,0 +1,14 @@
+{
+  "version": "1",
+  "schema_version": "1.0.0",
+  "generated_by": "hand-seeded; regenerate with `cargo run --example emit-vectors`",
+  "_comment": "This file is a seed for the cross-language test. Only the `empty_envelope` vector is hand-verified (see tests/canonical_vectors.rs for the derivation). The full set of vectors is produced by the emit-vectors example and should be regenerated on first run of `make test` on a Linux host. The cross_language test is written to pass as long as the Rust canonicalizer agrees with the file; if the file is newer than this seed it reflects committed, reviewed reality.",
+  "vectors": [
+    {
+      "name": "empty_envelope",
+      "description": "Fully default Envelope. Only the always-present bytes fields (payload, nonce) appear in canonical output. See tests/canonical_vectors.rs comment block for the hand derivation.",
+      "envelope_proto_hex": "",
+      "canonical_hex": "4a006200"
+    }
+  ]
+}
