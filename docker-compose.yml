@@ -1,0 +1,208 @@
+# ============================================================================
+# docker-compose.yml — M0 full stack for the Obsidian Ecosystem.
+# Authorized by: GitHub issue #15; M0 plan §"Component inventory".
+#
+# 8 containers total:
+#   Infrastructure: nats, redis, clickhouse
+#   Core services: chronos (time-oracle), tape-recorder
+#   Aletheia city: aletheia-core (Rust), aletheia-logic (Python)
+#   UI: visualization (nginx)
+# Memory budget: ~5.5 GB. Fits on the 64 GB Linux VM with headroom.
+# ============================================================================
+
+services:
+  # ---------- Infrastructure ----------
+
+  nats:
+    image: nats:2.11-alpine
+    command:
+      - "--jetstream"
+      - "--store_dir=/data/jetstream"
+      - "--http_port=8222"
+      - "--port=4222"
+      - "-m"
+      - "8222"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+      - "8080:8080"  # websocket gateway
+    volumes:
+      - nats-data:/data/jetstream
+      - ./infrastructure/nats/nats-server.conf:/etc/nats/nats-server.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "900mb"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8-alpine
+    environment:
+      CLICKHOUSE_DB: obsidian
+      CLICKHOUSE_USER: obsidian
+      CLICKHOUSE_PASSWORD: obsidian
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8123/ping || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+  # ---------- Core services ----------
+
+  chronos:
+    build:
+      context: .
+      dockerfile: core/time-oracle/Dockerfile
+    environment:
+      AGENT_ID: time-oracle-01
+      CITY: chronos
+      NATS_URL: nats://nats:4222
+      LEDGER_PATH: /data/ledger
+      CHRONOS_TICK_INTERVAL_MS: "1000"
+      LOG_LEVEL: info
+    volumes:
+      - ./ledger-data:/data/ledger
+    depends_on:
+      nats:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  tape-recorder:
+    build:
+      context: .
+      dockerfile: core/tape-recorder/Dockerfile
+    environment:
+      NATS_URL: nats://nats:4222
+      CLICKHOUSE_URL: http://clickhouse:8123
+      TAPE_CLICKHOUSE_DB: obsidian
+      TAPE_CLICKHOUSE_TABLE: tape
+      TAPE_BATCH_SIZE: "1000"
+      TAPE_BATCH_INTERVAL_MS: "1000"
+      LOG_LEVEL: info
+    depends_on:
+      nats:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  # ---------- Aletheia city ----------
+
+  aletheia-core:
+    # Hosts the Rust-native latency-critical agents: collector (CSV) +
+    # risk-overlord. Each is its own process for M0 simplicity; M1 can merge
+    # them under a shared supervisor.
+    build:
+      context: .
+      dockerfile: cities/aletheia/aletheia-core.Dockerfile
+    environment:
+      CITY: aletheia
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379
+      LEDGER_PATH: /data/ledger
+      CSV_FIXTURE_PATH: /fixtures/aapl_2023-03-13_1min.csv
+      CSV_PLAYBACK_SPEED: "1000.0"
+      RISK_MAX_GROSS_EXPOSURE_USD_CENTS: "10000000000"
+      RISK_MAX_POSITION_USD_CENTS: "2500000000"
+      RISK_MAX_DAILY_LOSS_USD_CENTS: "1500000000"
+      LOG_LEVEL: info
+    volumes:
+      - ./ledger-data:/data/ledger
+      - ./tests/fixtures:/fixtures:ro
+    depends_on:
+      nats:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chronos:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  aletheia-logic:
+    # Hosts the Python agents: momentum-signal, signal-blender, paper-executor.
+    build:
+      context: .
+      dockerfile: cities/aletheia/aletheia-logic.Dockerfile
+    environment:
+      CITY: aletheia
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379
+      LEDGER_PATH: /data/ledger
+      ALPACA_API_KEY: ${ALPACA_API_KEY:-}
+      ALPACA_API_SECRET: ${ALPACA_API_SECRET:-}
+      ALPACA_BASE_URL: https://paper-api.alpaca.markets
+      LOG_LEVEL: info
+    volumes:
+      - ./ledger-data:/data/ledger
+    depends_on:
+      nats:
+        condition: service_healthy
+      aletheia-core:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  # ---------- UI ----------
+
+  visualization:
+    build:
+      context: ./visualization
+      args:
+        VITE_NATS_WS_URL: ws://localhost:8080
+    ports:
+      - "8000:80"
+    depends_on:
+      nats:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+volumes:
+  nats-data:
+  clickhouse-data:
