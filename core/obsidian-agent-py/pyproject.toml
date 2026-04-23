@@ -1,0 +1,47 @@
+# ============================================================================
+# core/obsidian-agent-py/pyproject.toml
+# Authorized by: M0 plan §"Build order" step 4.
+# ============================================================================
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obsidian-agent"
+version = "0.1.0"
+description = "Base runtime for Python agents in the Obsidian Ecosystem — byte-for-byte compatible with obsidian-bus (Rust) and obsidian-agent-rs."
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "Apache-2.0 OR MIT"}
+authors = [{name = "Obsidian Ecosystem"}]
+dependencies = [
+    "nats-py>=2.8,<3",
+    "protobuf>=4.25,<5",
+    "pynacl>=1.5,<2",
+    "pydantic>=2.9,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "grpcio-tools>=1.60",
+]
+
+[tool.setuptools.packages.find]
+include = ["obsidian_agent*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]
