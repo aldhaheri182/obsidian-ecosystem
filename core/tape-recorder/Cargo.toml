@@ -1,0 +1,37 @@
+# ============================================================================
+# core/tape-recorder/Cargo.toml
+# Authorized by: spec Part 4.3; M0 plan §"Acceptance tests" #2.
+# ============================================================================
+
+[package]
+name = "tape-recorder"
+version = "0.1.0"
+description = "Subscribes to every NATS subject and persists every envelope to ClickHouse."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "tape-recorder"
+path = "src/main.rs"
+
+[dependencies]
+obsidian-bus = { path = "../obsidian-bus" }
+
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+futures = { workspace = true }
+async-nats = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+clickhouse = { workspace = true }
+serde = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+bytes = { workspace = true }

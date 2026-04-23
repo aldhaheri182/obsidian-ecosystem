@@ -1,0 +1,33 @@
+# ============================================================================
+# core/time-oracle/Cargo.toml
+# Authorized by: spec Part 16 (Chronos); M0 plan §"Component inventory".
+# ============================================================================
+
+[package]
+name = "time-oracle"
+version = "0.1.0"
+description = "Chronos city's time oracle: publishes HLC timestamps to `chronos.time.oracle` at 1 Hz."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "time-oracle"
+path = "src/main.rs"
+
+[dependencies]
+obsidian-bus = { path = "../obsidian-bus" }
+obsidian-agent-rs = { path = "../obsidian-agent-rs" }
+
+tokio = { workspace = true }
+futures = { workspace = true }
+async-trait = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }

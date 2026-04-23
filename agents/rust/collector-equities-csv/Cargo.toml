@@ -1,0 +1,28 @@
+[package]
+name = "collector-equities-csv"
+version = "0.1.0"
+description = "CSV replay market-data collector (M0)."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "collector-equities-csv"
+path = "src/main.rs"
+
+[dependencies]
+obsidian-bus = { path = "../../../core/obsidian-bus" }
+obsidian-agent-rs = { path = "../../../core/obsidian-agent-rs" }
+
+tokio = { workspace = true }
+futures = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true }
+csv = { workspace = true }
+prost = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }

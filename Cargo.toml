@@ -22,6 +22,7 @@ members = [
     "agents/rust/collector-equities-csv",
     "agents/rust/risk-overlord",
 ]
+exclude = []
 
 [workspace.package]
 edition = "2021"
