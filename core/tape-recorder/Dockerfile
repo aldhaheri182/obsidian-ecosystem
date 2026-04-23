@@ -1,4 +1,4 @@
-FROM rust:1.85-slim AS build
+FROM rust:1.88-slim AS build
 WORKDIR /build
 RUN apt-get update && apt-get install -y --no-install-recommends \
       protobuf-compiler pkg-config libssl-dev clang && \
