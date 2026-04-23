@@ -6,9 +6,17 @@ This is **not** a single trading strategy. It is a factory that discovers, valid
 
 ## Status
 
-**Current milestone:** M0 — Walking Skeleton (in progress).
+**M0 — Walking Skeleton: CLOSED (code-frozen 2026-04-24).**
 
-See `docs/milestones/M0-walking-skeleton.md` for the active build spec. See `docs/specification.md` for the long-horizon architectural spec (the "maximal" vision from which M0 is carved).
+All 15 components and all 6 acceptance-test scripts have landed across 10
+commits on `main`. First-boot verification happens on the owner's macOS
+host; runtime fixes land as hotfix commits.
+
+Next milestone: **M1 — Memory Fabric** (GitHub issue #22). NOT started
+without owner go-ahead.
+
+See `docs/milestones/M0-walking-skeleton.md` for the M0 record. See
+`docs/specification.md` for the long-horizon architectural spec.
 
 ## Repository layout
 
@@ -38,14 +46,19 @@ See [Part 2 of the specification](docs/specification.md) for the full layout. In
 
 Go has been deliberately removed; see `docs/decisions/0001-language-set.md`.
 
-## Development
+## Development (macOS)
+
+Requires: **Docker Desktop ≥ 4.30** (set memory to ≥ 8 GB), OrbStack, or
+colima. The containers are all Linux under the hood.
 
 ```sh
-make up          # bring up the full M0 stack
-make test        # run all acceptance tests
-make replay      # replay a day from the tape
-make tamper      # attempt ledger tampering; expect failure
-make down        # tear down
+./scripts/bootstrap.sh    # host checks, ledger-data volume, .env, image pull
+# edit .env and set ALPACA_API_KEY + ALPACA_API_SECRET (paper-api.alpaca.markets only)
+make up                   # bring up the full M0 stack
+make test-acceptance      # run all 6 acceptance tests
+make replay DATE=2023-03-13
+make tamper               # attempt ledger tampering; expect failure
+make down                 # tear down
 ```
 
 ## License

@@ -107,7 +107,7 @@ Parallel:  every agent publishes system.heartbeat.{agent_id} at 1 Hz.
 
 ## Acceptance tests
 
-M0 ships only when all six pass on the Linux VM.
+M0 ships only when all six pass on the macOS host (via Docker Desktop or OrbStack).
 
 1. **Ledger immutability.** `scripts/tamper-ledger.py` attempts three attacks (direct RocksDB write, raw file edit, file replacement). `verify_chain()` must detect each; normal `append()` must succeed.
 2. **Replay determinism.** Run the AAPL fixture end-to-end; snapshot every agent's ledger hash. Wipe state. Replay from the Tape via `tape-recorder` gRPC. Final ledger hashes must match bit-for-bit.
@@ -162,7 +162,7 @@ Violations of this list in M0 commits must be reverted.
 
 M0 is complete when:
 
-1. All six acceptance tests pass on the Linux VM under CI.
+1. All six acceptance tests pass on the macOS host (via Docker Desktop or OrbStack) under CI.
 2. `make up` brings the full stack to green (all 6 agents heartbeat; UI connects).
 3. `make replay` reproduces a prior day with bit-identical ledger hashes.
 4. `make tamper` demonstrates `verify_chain` rejects every tampering attempt.
@@ -170,7 +170,7 @@ M0 is complete when:
 
 ## Completed — code-frozen 2026-04-24
 
-**Status:** closed by owner at code-freeze. Not verified on the Linux VM.
+**Status:** closed by owner at code-freeze. Not verified on the macOS host (via Docker Desktop or OrbStack).
 Runtime issues discovered during first-boot verification land as hotfix
 commits on `main`; this milestone is not reopened.
 
@@ -203,9 +203,46 @@ See "Out-of-scope for M0" above. Nothing from that list is in the tree.
 
 ### What is NOT verified
 
-Exit criteria #1-#4 above require a Linux VM with Docker. They have not
-been run. First-boot issues are expected and will be fixed via hotfix
-commits. The milestone is closed administratively at owner direction.
+Exit criteria #1-#4 above have not been run against any host. First-boot
+issues are expected and will be fixed via hotfix commits. The milestone
+is closed administratively at owner direction.
+
+### Runtime target
+
+**macOS** with Docker Desktop ≥ 4.30 OR OrbStack (strongly preferred on
+Apple Silicon for performance). Colima also works. The containers
+themselves are Linux (`debian:bookworm-slim`, `rust:1.82-slim`,
+`python:3.12-slim`, `nats:2.11-alpine`, `redis:7.4-alpine`,
+`clickhouse/clickhouse-server:24.8-alpine`, `nginx:alpine`), so nothing
+macOS-native is invoked — but the **Docker VM** needs enough memory:
+
+| Container | Cap | Notes |
+|---|---|---|
+| nats | 512 MB | JetStream store |
+| redis | 1 GB | cache; no disk persistence in M0 |
+| clickhouse | 2 GB | raises soft/hard nofile |
+| chronos | 256 MB | tiny |
+| tape-recorder | 512 MB | batcher |
+| aletheia-core | 512 MB | Rust agents |
+| aletheia-logic | 512 MB | Python agents |
+| visualization | 256 MB | nginx serve |
+
+**Total ≈ 5.5 GB.** Docker Desktop defaults to 4 GB on macOS; set it to
+**≥ 8 GB** (Settings → Resources → Memory) before `make up`. On OrbStack
+the default 8 GB is sufficient.
+
+### macOS-specific notes
+
+- **No `/data/ledger` outside container**: the bind mount uses `./ledger-data`
+  relative to the repo root. macOS APFS is fine with this.
+- **File permissions**: the bootstrap script's `chmod 0777 ledger-data` is
+  a best-effort; Docker Desktop on macOS handles uid/gid translation
+  through its own file-sharing layer.
+- **clickhouse ulimits**: macOS's default file-handle limits are lower than
+  Linux's. Docker Desktop's VM already carries sufficient limits for
+  ClickHouse in our M0 workload; no host-side change required.
+- **Networking**: `ws://localhost:8080` in the browser works identically
+  because Docker Desktop / OrbStack publish the port on the host.
 
 ### Next milestone
 
