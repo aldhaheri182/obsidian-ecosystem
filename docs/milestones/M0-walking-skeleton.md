@@ -168,4 +168,48 @@ M0 is complete when:
 4. `make tamper` demonstrates `verify_chain` rejects every tampering attempt.
 5. This document is updated with a "Completed" section listing the commit SHAs of the passing run.
 
+## Completed — code-frozen 2026-04-24
+
+**Status:** closed by owner at code-freeze. Not verified on the Linux VM.
+Runtime issues discovered during first-boot verification land as hotfix
+commits on `main`; this milestone is not reopened.
+
+### Commit map (all on `main`, origin `aldhaheri182/obsidian-ecosystem`)
+
+```
+d7cb4f6 tests: six M0 acceptance test scripts
+db2131f infra: docker-compose.yml + Dockerfiles + bootstrap scripts
+a0906ba visualization/: M0 Owner Observatory (Svelte + PixiJS single-city)
+9af7856 agents: momentum-signal, signal-blender, paper-executor, risk-overlord
+5cfad1e core/tape-recorder + core/time-oracle + collector-equities-csv
+78255e2 core/obsidian-ledger: immutable, hash-chained, Ed25519-signed ledger
+64b6a94 core/obsidian-agent-py: Python mirror of the Rust agent runtime
+00e70bb core/obsidian-agent-rs: ObsidianAgent trait + supervisor + lifecycle
+012b097 core/obsidian-bus: canonical envelope, Ed25519 signing, NATS wiring
+fb9ce06 M0 foundation: plan, ADRs, protos, workspace scaffolding
+```
+
+### What landed
+
+- All 15 components in the build order above.
+- All 6 acceptance-test scripts.
+- Full `docker-compose.yml` + Dockerfiles for every service.
+- Bootstrap, seed-csv, tamper-ledger, and replay-day scripts.
+- One bundled AAPL fixture (`tests/fixtures/aapl_2023-03-13_1min.csv`).
+
+### What did NOT land in M0 (intentional, deferred to later milestones)
+
+See "Out-of-scope for M0" above. Nothing from that list is in the tree.
+
+### What is NOT verified
+
+Exit criteria #1-#4 above require a Linux VM with Docker. They have not
+been run. First-boot issues are expected and will be fixed via hotfix
+commits. The milestone is closed administratively at owner direction.
+
+### Next milestone
+
+M1 — Memory Fabric. **Do not start M1 without explicit owner authorization.**
+M1's tracker is GitHub issue #22.
+
 Upon completion, M1 (Memory Fabric) begins against the interfaces established here. No M0 component should need to change for M1.
