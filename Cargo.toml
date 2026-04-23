@@ -33,10 +33,11 @@ repository = "https://github.com/aldhaheri182/obsidian-ecosystem"
 [workspace.dependencies]
 # --- runtime ---
 tokio = { version = "1.41", features = ["full"] }
-tokio-util = "0.7"
+tokio-util = { version = "0.7", features = ["rt"] }
 tokio-stream = "0.1"
 async-trait = "0.1"
 futures = "0.3"
+pin-project = "1.1"
 
 # --- bus ---
 async-nats = "0.36"

@@ -1,0 +1,42 @@
+# ============================================================================
+# core/obsidian-agent-rs/Cargo.toml
+#
+# Authorized by: M0 plan §"Build order" step 3; ADR 0002 (container granularity).
+#
+# The base runtime used by every Rust agent. Provides:
+#   - `ObsidianAgent` trait (lifecycle + message handling).
+#   - `Supervisor` (spawns agents as in-process tasks, restarts on failure).
+#   - `AgentContext` (dependency-injected bus client, metadata, shutdown).
+#   - Heartbeat loop driven by the supervisor.
+# ============================================================================
+
+[package]
+name = "obsidian-agent-rs"
+version = "0.1.0"
+description = "Base runtime for Rust agents in the Obsidian Ecosystem: trait, supervisor, lifecycle, heartbeat."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+obsidian-bus = { path = "../obsidian-bus" }
+
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+futures = { workspace = true }
+async-trait = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tracing-subscriber = { workspace = true }
