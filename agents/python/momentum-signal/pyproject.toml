@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obsidian-momentum-signal"
+version = "0.1.0"
+description = "M0 SMA(20/50) momentum signal agent."
+requires-python = ">=3.12"
+dependencies = ["obsidian-agent"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
