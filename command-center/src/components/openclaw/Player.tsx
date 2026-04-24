@@ -54,6 +54,8 @@ export function Player() {
   const discoverRoom = useOpenClawStore((s) => s.discoverRoom);
   const pushToast = useOpenClawStore((s) => s.pushToast);
   const selectAgent = useOpenClawStore((s) => s.selectAgent);
+  const cameraMode = useOpenClawStore((s) => s.cameraMode);
+  const toggleCameraMode = useOpenClawStore((s) => s.toggleCameraMode);
 
   const keys = useMemo(
     () => ({ w: false, a: false, s: false, d: false, shift: false, e: false }),
@@ -100,7 +102,11 @@ export function Player() {
         e.preventDefault();
         useOpenClawStore.getState().setZoom(1);
       }
-      // TAB disabled: command map is the only view
+      // V — toggle POV / Command Map
+      if (k === 'v') {
+        e.preventDefault();
+        toggleCameraMode();
+      }
     };
     const onUp = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
@@ -129,7 +135,7 @@ export function Player() {
       window.removeEventListener('keyup', onUp);
       window.removeEventListener('wheel', onWheel);
     };
-  }, [keys, nearestRoomId, openPanelRoomId, openPanel, pushLog, selectAgent]);
+  }, [keys, nearestRoomId, openPanelRoomId, openPanel, pushLog, selectAgent, toggleCameraMode]);
 
   // Snap the 3D group to the store's playerPos when it diverges sharply
   // (teleport path). Small divergences caused by the useFrame-writes are
@@ -146,30 +152,65 @@ export function Player() {
 
   const camTarget = useMemo(() => new THREE.Vector3(), []);
   const desiredCamPos = useMemo(() => new THREE.Vector3(), []);
+  // Accumulated facing yaw used in POV mode (A/D rotate the camera).
+  const yawRef = useRef(0);
+
+  // Switch FOV when cameraMode changes — wider for POV, narrow for map.
+  useEffect(() => {
+    const persp = camera as THREE.PerspectiveCamera;
+    if (!('fov' in persp)) return;
+    persp.fov = cameraMode === 'pov' ? 72 : 35;
+    persp.updateProjectionMatrix();
+  }, [cameraMode, camera]);
 
   useFrame((_, dt) => {
     if (!group.current) return;
     // Don't walk if the modal is open (better UX).
     const modalOpen = !!openPanelRoomId;
+    const mode = useOpenClawStore.getState().cameraMode;
 
-    let dx = 0;
-    let dz = 0;
-    if (!modalOpen) {
-      if (keys.w) dz -= 1;
-      if (keys.s) dz += 1;
-      if (keys.a) dx -= 1;
-      if (keys.d) dx += 1;
-    }
-    const mag = Math.hypot(dx, dz);
-    if (mag > 0) {
-      dx /= mag;
-      dz /= mag;
-      const speed = keys.shift ? RUN_SPEED : WALK_SPEED;
-      group.current.position.x += dx * speed * dt;
-      group.current.position.z += dz * speed * dt;
-      const yaw = Math.atan2(dx, dz);
-      if (body.current) body.current.rotation.y = yaw;
-      setPlayerFacing(yaw);
+    if (mode === 'pov') {
+      // POV movement — W/S move forward/backward along facing, A/D turn.
+      const TURN_RATE = 2.6; // rad/s
+      if (!modalOpen) {
+        if (keys.a) yawRef.current -= TURN_RATE * dt;
+        if (keys.d) yawRef.current += TURN_RATE * dt;
+      }
+      let mv = 0;
+      if (!modalOpen) {
+        if (keys.w) mv -= 1;
+        if (keys.s) mv += 1;
+      }
+      if (mv !== 0) {
+        const speed = keys.shift ? RUN_SPEED : WALK_SPEED;
+        const yaw = yawRef.current;
+        group.current.position.x += Math.sin(yaw) * mv * speed * dt;
+        group.current.position.z += Math.cos(yaw) * mv * speed * dt;
+      }
+      if (body.current) body.current.rotation.y = yawRef.current;
+      setPlayerFacing(yawRef.current);
+    } else {
+      // Command-map movement — axis-aligned WASD, facing follows motion.
+      let dx = 0;
+      let dz = 0;
+      if (!modalOpen) {
+        if (keys.w) dz -= 1;
+        if (keys.s) dz += 1;
+        if (keys.a) dx -= 1;
+        if (keys.d) dx += 1;
+      }
+      const mag = Math.hypot(dx, dz);
+      if (mag > 0) {
+        dx /= mag;
+        dz /= mag;
+        const speed = keys.shift ? RUN_SPEED : WALK_SPEED;
+        group.current.position.x += dx * speed * dt;
+        group.current.position.z += dz * speed * dt;
+        const yaw = Math.atan2(dx, dz);
+        yawRef.current = yaw;
+        if (body.current) body.current.rotation.y = yaw;
+        setPlayerFacing(yaw);
+      }
     }
 
     // Clamp to world bounds
@@ -289,26 +330,35 @@ export function Player() {
       m.scale.set(s, s, 1);
     });
 
-    // Command-map camera — pulled-back strategy overview by default;
-    // scroll / +/- zooms in (down to ~0.18) toward the player's room.
-    // At full zoom-out the camera looks at (0,0,0); as zoom approaches
-    // 1.0 → 0.18 the look-target blends toward the player position so
-    // the zoom feels like "zoom into what I'm inspecting".
-    const breathe = Math.sin(tSec * 0.7) * 0.12;
-    const zoom = useOpenClawStore.getState().zoom;
-    // Blend factor: 0 at zoom=1, 1 at zoom=0.18
-    const blend = Math.min(1, Math.max(0, (1 - zoom) / (1 - 0.18)));
-    const tx = px * blend;
-    const tz = pz * blend;
-    desiredCamPos.set(tx + 0, 32 * zoom + breathe, tz + 22 * zoom + breathe * 0.5);
-    camera.position.lerp(desiredCamPos, 0.08);
-    camTarget.set(tx, 0, tz);
-    camera.lookAt(camTarget);
+    if (mode === 'pov') {
+      // First-person camera at player head height, looking forward.
+      const HEAD_Y = 1.1;
+      const yaw = yawRef.current;
+      const fx = Math.sin(yaw);
+      const fz = Math.cos(yaw);
+      desiredCamPos.set(px, HEAD_Y, pz);
+      camera.position.lerp(desiredCamPos, 0.65);
+      camTarget.set(px + fx * 3, HEAD_Y - 0.08, pz + fz * 3);
+      camera.lookAt(camTarget);
+    } else {
+      // Command-map camera — pulled-back strategy overview; wheel/+/−
+      // zooms in (down to ~0.18) toward the player's room.
+      const breathe = Math.sin(tSec * 0.7) * 0.12;
+      const zoom = useOpenClawStore.getState().zoom;
+      // Blend factor: 0 at zoom=1, 1 at zoom=0.18
+      const blend = Math.min(1, Math.max(0, (1 - zoom) / (1 - 0.18)));
+      const tx = px * blend;
+      const tz = pz * blend;
+      desiredCamPos.set(tx, 32 * zoom + breathe, tz + 22 * zoom + breathe * 0.5);
+      camera.position.lerp(desiredCamPos, 0.08);
+      camTarget.set(tx, 0, tz);
+      camera.lookAt(camTarget);
+    }
   });
 
   return (
     <group ref={group} position={PLAYER_SPAWN}>
-      <group ref={body}>
+      <group ref={body} visible={cameraMode !== 'pov'}>
         {/* Torso */}
         <mesh position={[0, 0.38, 0]} castShadow>
           <capsuleGeometry args={[0.12, 0.32, 5, 12]} />

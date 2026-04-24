@@ -28,7 +28,7 @@ export interface Toast {
   startedAt: number;
 }
 
-export type CameraMode = 'command' | 'explore';
+export type CameraMode = 'command' | 'pov';
 
 export interface SelectedAgent {
   roomId: string;
@@ -119,7 +119,7 @@ export const useOpenClawStore = create<OpenClawStore>((set) => ({
   cameraMode: 'command',
   setCameraMode: (m) => set({ cameraMode: m }),
   toggleCameraMode: () =>
-    set((s) => ({ cameraMode: s.cameraMode === 'explore' ? 'command' : 'explore' })),
+    set((s) => ({ cameraMode: s.cameraMode === 'pov' ? 'command' : 'pov' })),
 
   zoom: 0.55,
   setZoom: (z) => set({ zoom: Math.max(0.18, Math.min(1, z)) }),

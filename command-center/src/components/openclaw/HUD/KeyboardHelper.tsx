@@ -13,8 +13,9 @@ export function KeyboardHelper() {
       <Row k="WASD" label="MOVE" />
       <Row k="SHIFT" label="RUN" />
       <Row k="E" label="INTERACT" />
+      <Row k="V" label="POV · COMMAND" />
       <Row k="CLICK" label="SELECT AGENT" />
-      <Row k="WHEEL" label="ZOOM" />
+      <Row k="WHEEL" label="ZOOM (MAP)" />
       <Row k="+ / −" label="ZOOM IN / OUT" />
       <Row k="0" label="RESET ZOOM" />
       <Row k="ESC" label="BACK" />

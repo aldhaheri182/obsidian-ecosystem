@@ -8,6 +8,8 @@ import { ROOMS } from '@/data/openclawRooms';
 export function TopBar() {
   const [utc, setUtc] = useState('');
   const nearestRoomId = useOpenClawStore((s) => s.nearestRoomId);
+  const cameraMode = useOpenClawStore((s) => s.cameraMode);
+  const toggleCameraMode = useOpenClawStore((s) => s.toggleCameraMode);
 
   useEffect(() => {
     setUtc(new Date().toISOString().slice(11, 19));
@@ -36,17 +38,24 @@ export function TopBar() {
 
       <div className="flex items-center gap-6">
         <Stat label="AGENTS" value="12" color="#4ECDC4" />
-        {/* Command map is the only view */}
-        <div
-          className="flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] tracking-[0.22em] font-mono"
+        {/* Camera mode chip — click to toggle between Command Map + POV */}
+        <button
+          type="button"
+          onClick={toggleCameraMode}
+          className="flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] tracking-[0.22em] font-mono transition"
           style={{
-            borderColor: '#FFD166',
-            color: '#FFD166',
-            background: 'rgba(255,209,102,0.08)',
+            borderColor: cameraMode === 'pov' ? '#4ECDC4' : '#FFD166',
+            color: cameraMode === 'pov' ? '#4ECDC4' : '#FFD166',
+            background: cameraMode === 'pov'
+              ? 'rgba(78,205,196,0.10)'
+              : 'rgba(255,209,102,0.10)',
+            pointerEvents: 'auto',
+            cursor: 'pointer',
           }}
         >
-          COMMAND MAP
-        </div>
+          {cameraMode === 'pov' ? 'POV' : 'COMMAND MAP'}
+          <span className="text-ash-grey">· V</span>
+        </button>
         <Stat label="ROOM" value={nearestRoom ? nearestRoom.name.toUpperCase() : '—'} color={nearestRoom?.accent ?? '#6C757D'} />
       </div>
 
