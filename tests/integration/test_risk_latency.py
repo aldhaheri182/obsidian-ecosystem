@@ -35,7 +35,7 @@ def _noop_payload() -> bytes:
     return b""
 
 
-async def _measure(url: str = "nats://localhost:4222") -> List[float]:
+async def _measure(url: str = "nats://localhost:14222") -> List[float]:
     assert nats is not None, "pip install nats-py"
     nc = await nats.connect(servers=[url])
     overrides: asyncio.Queue = asyncio.Queue()

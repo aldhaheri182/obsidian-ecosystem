@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 # aletheia-core launches both binaries, forwards signals, exits on first death.
+# Uses `wait -n` which requires bash (not dash / /bin/sh).
 set -e
 
 : "${NATS_URL:=nats://nats:4222}"

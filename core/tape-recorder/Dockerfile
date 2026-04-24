@@ -1,7 +1,7 @@
 FROM rust:1.88-slim AS build
 WORKDIR /build
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      protobuf-compiler pkg-config libssl-dev clang && \
+      protobuf-compiler libprotobuf-dev pkg-config libssl-dev clang && \
     rm -rf /var/lib/apt/lists/*
 COPY . .
 RUN cargo build --release -p tape-recorder

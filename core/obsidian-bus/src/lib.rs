@@ -49,6 +49,7 @@ pub mod signing;
 /// All Protobuf types generated from /proto.
 ///
 /// The module is populated at build time by `build.rs` via `prost-build`.
+#[allow(missing_docs)] // generated code has no per-field docs; crate-level doc suffices
 pub mod proto {
     // Generated from proto/*.proto — see build.rs.
     // All messages live in the `obsidian` package per the proto files'

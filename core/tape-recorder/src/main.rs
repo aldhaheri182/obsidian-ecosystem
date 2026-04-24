@@ -57,6 +57,8 @@ async fn main() -> anyhow::Result<()> {
     let ch_config = ClickHouseConfig {
         url: env_or("CLICKHOUSE_URL", "http://clickhouse:8123"),
         database: env_or("TAPE_CLICKHOUSE_DB", "obsidian"),
+        user: std::env::var("CLICKHOUSE_USER").ok(),
+        password: std::env::var("CLICKHOUSE_PASSWORD").ok(),
         table: env_or("TAPE_CLICKHOUSE_TABLE", "tape"),
     };
     let batch_size: usize = env_parse("TAPE_BATCH_SIZE", 1000);

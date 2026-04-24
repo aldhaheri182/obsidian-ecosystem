@@ -14,7 +14,7 @@ import pytest
 import urllib.request
 import urllib.parse
 
-CLICKHOUSE_URL = "http://localhost:8123"
+CLICKHOUSE_URL = "http://obsidian:obsidian@localhost:18123"
 
 
 def _ch_count(type_label: str) -> int:

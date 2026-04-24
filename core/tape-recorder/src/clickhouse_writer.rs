@@ -14,6 +14,8 @@ pub struct ClickHouseConfig {
     pub url: String,
     pub database: String,
     pub table: String,
+    pub user: Option<String>,
+    pub password: Option<String>,
 }
 
 /// One row in the `tape` table. Shape matches spec §5.5.
@@ -43,9 +45,15 @@ pub struct ClickHouseWriter {
 impl ClickHouseWriter {
     /// Connect. Does not create the schema; call `ensure_schema` after.
     pub async fn connect(config: ClickHouseConfig) -> anyhow::Result<Self> {
-        let client = Client::default()
+        let mut client = Client::default()
             .with_url(&config.url)
             .with_database(&config.database);
+        if let Some(u) = &config.user {
+            client = client.with_user(u);
+        }
+        if let Some(p) = &config.password {
+            client = client.with_password(p);
+        }
         Ok(Self { client, config })
     }
 

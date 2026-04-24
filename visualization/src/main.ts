@@ -16,7 +16,7 @@ const emergencyBtn = document.getElementById("emergency-stop") as HTMLButtonElem
 const pauseBtn = document.getElementById("pause-trading") as HTMLButtonElement;
 
 const NATS_URL =
-  (import.meta as any).env?.VITE_NATS_WS_URL ?? "ws://localhost:8080";
+  (import.meta as any).env?.VITE_NATS_WS_URL ?? "ws://localhost:18080";
 
 const city = new CityView(cityEl);
 const tape = new TapeFeed(30);

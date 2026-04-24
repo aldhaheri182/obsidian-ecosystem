@@ -316,7 +316,6 @@ impl Stream for Subscription {
     type Item = Result<Envelope>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        use futures::StreamExt;
         let this = self.get_mut();
         loop {
             match Pin::new(&mut this.inner).poll_next(cx) {

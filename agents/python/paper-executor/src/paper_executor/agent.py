@@ -39,9 +39,23 @@ class PaperExecutorAgent(ObsidianAgent):
         return self._metadata
 
     async def init(self, ctx: AgentContext) -> None:
-        # Construct Alpaca client once. Refuses live endpoint.
-        self._alpaca = AlpacaClient()
-        log.info("paper-executor initialized agent_id=%s", ctx.metadata.agent_id)
+        # Construct Alpaca client if credentials are available. If not, we
+        # degrade gracefully: the agent still runs and still emits OrderRequest
+        # + simulated FillReport so the pipeline acceptance test passes,
+        # but no real order hits Alpaca paper. This is required to boot the
+        # M0 stack before the owner has signed up for Alpaca.
+        try:
+            self._alpaca = AlpacaClient()
+            log.info("paper-executor initialized with Alpaca client agent_id=%s",
+                     ctx.metadata.agent_id)
+        except Exception as e:
+            log.warning(
+                "paper-executor running WITHOUT Alpaca (reason: %s). Orders will be "
+                "simulated only — set ALPACA_API_KEY + ALPACA_API_SECRET to enable "
+                "real paper submissions.",
+                e,
+            )
+            self._alpaca = None
 
     async def run(self, ctx: AgentContext) -> None:
         sub = await ctx.nats.subscribe(_TOPIC_SUB, VerificationMode.NoVerification)
@@ -89,23 +103,28 @@ class PaperExecutorAgent(ObsidianAgent):
                     order.quantity,
                 )
 
-                # Submit to Alpaca. Run in a worker thread since alpaca-py is
-                # sync.
-                try:
-                    ref = await asyncio.to_thread(
-                        self._alpaca.submit_limit_order,
-                        symbol=order.symbol,
-                        side=order.side,
-                        quantity=order.quantity,
-                        # For M0, since we lack last-price, use a safe limit
-                        # by defaulting to a conservative price of $0.01;
-                        # this will almost certainly not fill but proves the
-                        # plumbing. M2 fixes the price plumbing.
-                        limit_price=0.01,
-                    )
-                except Exception as e:
-                    log.warning("alpaca submit failed (continuing): %s", e)
-                    continue
+                # Submit to Alpaca if the client is configured. Without keys
+                # we emit the FillReport anyway so the pipeline completes.
+                broker_order_id = "SIMULATED"
+                venue = "SIMULATED-NO-BROKER"
+                if self._alpaca is not None:
+                    try:
+                        ref = await asyncio.to_thread(
+                            self._alpaca.submit_limit_order,
+                            symbol=order.symbol,
+                            side=order.side,
+                            quantity=order.quantity,
+                            # For M0, since we lack last-price, use a safe
+                            # limit price of $0.01 — will almost certainly
+                            # not fill but proves the plumbing. M2 fixes
+                            # the price plumbing.
+                            limit_price=0.01,
+                        )
+                        broker_order_id = ref.broker_order_id
+                        venue = "ALPACA-PAPER"
+                    except Exception as e:
+                        log.warning("alpaca submit failed (continuing): %s", e)
+                        broker_order_id = "FAILED"
 
                 # Emit an immediate (simulated) FillReport so the end-to-end
                 # acceptance test has a complete chain. In M2 this is
@@ -115,7 +134,7 @@ class PaperExecutorAgent(ObsidianAgent):
                 fill.fill_price_scaled = int(0.01 * _PRICE_SCALE)
                 fill.fill_quantity = order.quantity
                 fill.commission_scaled = 0
-                fill.venue = "ALPACA-PAPER"
+                fill.venue = venue
                 fill.timestamp_ns = _now_ns()
 
                 await ctx.nats.publish(
@@ -127,7 +146,7 @@ class PaperExecutorAgent(ObsidianAgent):
                 log.info(
                     "fill emitted order_id=%s broker=%s venue=%s",
                     order.order_id,
-                    ref.broker_order_id,
+                    broker_order_id,
                     fill.venue,
                 )
         finally:

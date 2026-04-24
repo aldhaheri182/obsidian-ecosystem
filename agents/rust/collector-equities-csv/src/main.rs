@@ -53,6 +53,23 @@ impl ObsidianAgent for CsvCollectorAgent {
             "csv collector starting",
         );
 
+        // Startup delay: give downstream subscribers (momentum-signal etc.)
+        // time to subscribe before we publish. NATS pub-sub is not durable,
+        // so anything published before subscribers are ready is lost.
+        // At CSV_PLAYBACK_SPEED=1000 the fixture finishes in ~3s which is
+        // faster than aletheia-logic's Python boot. Default 10s.
+        let delay_ms: u64 = std::env::var("COLLECTOR_STARTUP_DELAY_MS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(10_000);
+        if delay_ms > 0 {
+            info!(delay_ms, "collector waiting for subscribers to be ready");
+            tokio::select! {
+                _ = ctx.shutdown.cancelled() => return Ok(()),
+                _ = tokio::time::sleep(std::time::Duration::from_millis(delay_ms)) => {}
+            }
+        }
+
         let rows = csv_replayer::read_fixture(&self.fixture_path)
             .map_err(|e| obsidian_agent_rs::AgentError::Runtime(format!("csv read: {e}")))?;
         info!(rows = rows.len(), "fixture loaded");

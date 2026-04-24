@@ -17,7 +17,7 @@ license = {text = "Apache-2.0 OR MIT"}
 authors = [{name = "Obsidian Ecosystem"}]
 dependencies = [
     "nats-py>=2.8,<3",
-    "protobuf>=4.25,<5",
+    "protobuf>=5.27,<7",
     "pynacl>=1.5,<2",
     "pydantic>=2.9,<3",
 ]

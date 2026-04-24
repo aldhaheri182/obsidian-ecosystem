@@ -57,7 +57,7 @@ async def _wait_for_full(seen: Set[str]) -> None:
 @pytest.mark.acceptance
 @pytest.mark.skipif(nats is None, reason="nats-py not installed")
 def test_six_agents_heartbeat_within_ten_seconds():
-    seen = asyncio.run(_collect("nats://localhost:4222", timeout_s=10.0))
+    seen = asyncio.run(_collect("nats://localhost:14222", timeout_s=10.0))
     missing = EXPECTED_AGENT_IDS - seen
     assert not missing, f"missing heartbeats from: {missing}"
     unexpected = seen - EXPECTED_AGENT_IDS
