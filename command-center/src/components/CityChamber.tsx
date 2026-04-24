@@ -65,15 +65,23 @@ export function CityChamber({ city }: { city: CityData }) {
   );
 
   // Emissive trim — intensity 2.0 per spec, boosted further on hover,
-  // and pulsing in crimson when city risk > 60.
+  // on selection, on a live-bus activity pulse (Phase C), and pulsing in
+  // crimson when city risk > 60.
   const trimRef = useRef<THREE.MeshStandardMaterial>(null);
   const riskRingRef = useRef<THREE.MeshStandardMaterial>(null);
   const atRisk = city.metrics.risk > 60;
+  const pulseUntilMs = useEcosystemStore((s) => s.activityPulses[city.id] ?? 0);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
+    const now = Date.now();
+    const pulseFactor = pulseUntilMs > now
+      ? // 0..1 easing based on remaining time in pulse
+        Math.max(0, Math.min(1, (pulseUntilMs - now) / 900))
+      : 0;
     if (trimRef.current) {
       const base = hover ? 3.0 : 2.0;
-      trimRef.current.emissiveIntensity = base + (selected ? 1.2 : 0);
+      trimRef.current.emissiveIntensity =
+        base + (selected ? 1.2 : 0) + pulseFactor * 2.0;
     }
     if (riskRingRef.current) {
       // Crimson risk-alert ring pulses on the floor when risk high.

@@ -12,8 +12,18 @@ export function CityDetailPanel() {
   const selectedCityId = useEcosystemStore((s) => s.selectedCityId);
   const cities = useEcosystemStore((s) => s.cities);
   const selectCity = useEcosystemStore((s) => s.selectCity);
+  const mode = useEcosystemStore((s) => s.mode);
+  const liveAgents = useEcosystemStore((s) => s.liveAgents);
 
   const city = cities.find((c) => c.id === selectedCityId) ?? null;
+
+  function liveInCity(cityId: string): number {
+    if (!city) return 0;
+    const now = Date.now();
+    return city.agents.filter(
+      (a) => liveAgents[a.id] !== undefined && now - liveAgents[a.id] < 5000,
+    ).length;
+  }
 
   return (
     <AnimatePresence>
@@ -80,12 +90,27 @@ export function CityDetailPanel() {
 
           {/* Agent roster */}
           <section className="p-4 border-b border-[rgba(42,42,62,0.3)]">
-            <div className="text-[10px] font-mono tracking-[0.25em] text-ash-grey mb-3">AGENT ROSTER</div>
-            {city.agents.map((a) => (
+            <div className="text-[10px] font-mono tracking-[0.25em] text-ash-grey mb-3 flex items-center justify-between">
+              <span>AGENT ROSTER</span>
+              {mode === 'real-time' && (
+                <span className="text-[9px] text-cyan-aurora">
+                  ● LIVE ({liveInCity(city.id)}/{city.agents.length} seen &lt; 5 s)
+                </span>
+              )}
+            </div>
+            {city.agents.map((a) => {
+              const liveTs = liveAgents[a.id];
+              const isLive = mode === 'real-time' && liveTs && Date.now() - liveTs < 5000;
+              return (
               <div key={a.id} className="flex items-center gap-3 py-2 border-b border-[rgba(42,42,62,0.2)] last:border-0">
-                <StatusDot status={a.status} />
+                <StatusDot status={isLive ? 'active' : a.status} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[11px] font-mono truncate">{a.name}</div>
+                  <div className="text-[11px] font-mono truncate flex items-center gap-2">
+                    <span>{a.name}</span>
+                    {isLive && (
+                      <span className="text-[8px] tracking-widest text-cyan-aurora">HEARTBEAT</span>
+                    )}
+                  </div>
                   <div className="text-[9px] text-ash-grey tracking-wider truncate">{a.role} • {a.task}</div>
                 </div>
                 <div className="w-[70px] h-[24px]">
@@ -103,7 +128,8 @@ export function CityDetailPanel() {
                   </ResponsiveContainer>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </section>
 
           {/* Signals (only if present) */}

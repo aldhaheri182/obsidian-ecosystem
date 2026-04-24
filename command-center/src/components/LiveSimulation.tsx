@@ -3,6 +3,10 @@
 // Spec §13.2 — Every 2 s: mutate random agent status/task, append logs
 // (cap 50), fluctuate metrics within realistic ranges, emit a timeline
 // entry. Data-flow orb events are handled by ConnectionLines itself.
+//
+// Phase C gates this behind `mode === 'simulation'`; when the Owner flips
+// the SIMULATION/REAL-TIME pill in the top bar, this hook goes silent and
+// useLiveBus takes over.
 
 import { useEffect } from 'react';
 import { useEcosystemStore } from '@/store/ecosystemStore';
@@ -34,10 +38,11 @@ function fmtTime(t: number): string {
 }
 
 export function LiveSimulation() {
-  const cities = useEcosystemStore.getState().cities;
+  const mode = useEcosystemStore((x) => x.mode);
   const store = useEcosystemStore;
 
   useEffect(() => {
+    if (mode !== 'simulation') return;
     const iv = setInterval(() => {
       const s = store.getState();
       // Pick a random city + agent + emit an activity record.
@@ -81,7 +86,7 @@ export function LiveSimulation() {
     }, 2000);
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mode]);
 
   return null;
 }

@@ -6,6 +6,7 @@ import { RightSidebar } from '@/components/HUD/RightSidebar';
 import { BottomTimeline } from '@/components/HUD/BottomTimeline';
 import { CityDetailPanel } from '@/components/HUD/CityDetailPanel';
 import { LiveSimulation } from '@/components/LiveSimulation';
+import { LiveBusController } from '@/components/LiveBusController';
 import { HudLegend } from '@/components/HUD/HudLegend';
 import { LoadingVeil } from '@/components/LoadingVeil';
 
@@ -26,6 +27,7 @@ export default function Page() {
       <CityDetailPanel />
       <HudLegend />
       <LiveSimulation />
+      <LiveBusController />
     </main>
   );
 }
