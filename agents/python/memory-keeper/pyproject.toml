@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obsidian-memory-keeper"
+version = "0.1.0"
+description = "Mnemosyne memory-keeper agent. NATS bus ↔ KnowledgeGraph + VectorStore + BlobArchive bridge. One shard per agent_id."
+requires-python = ">=3.12"
+dependencies = [
+    "obsidian-agent",
+    "obsidian-graph",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
