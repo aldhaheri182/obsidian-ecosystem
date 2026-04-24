@@ -1,0 +1,109 @@
+# Advancement Tier — Small (100)
+
+Tangible new capabilities.
+
+- Agent cloning with lineage marker.
+- Automated post-mortem generator for any RED incident.
+- Custom alarm builder in the Owner UI.
+- Agent-to-agent duels (1v1 simulated capital).
+- Data collector plug-in manifest.
+- Semantic search frontend with filters.
+- Memory export bundle (agent, time-range).
+- Per-city P&L widget.
+- Reflection diff viewer (yesterday vs today).
+- Heatmap of signal confidence over time.
+- Principle citation search.
+- Board memo templating.
+- Emergency-stop audit log.
+- Risk-limit change history.
+- Agent birth announcement sound pack customizer.
+- CSV fixture uploader for Dream Room.
+- Multi-ledger verification job.
+- Tape export to Parquet.
+- Public-key registry browser.
+- Knowledge-graph subgraph export.
+- Vector embedding inspector.
+- Heartbeat latency distribution dashboard.
+- Correlation matrix delta viewer.
+- Regime change notifier.
+- Dream Room bookmark library.
+- Principle of-the-day surfacing.
+- Chimera data preview in Prometheus.
+- Adversarial tester pattern library.
+- Signal breakdown (feature importance) visualizer.
+- Walkabout chat transcript export.
+- Reflection scheduler override.
+- Agent retirement preview.
+- Resurrected-agent diff view.
+- Silent-Vault access log view.
+- Federation bridge status panel.
+- Owner note pad (private, signed).
+- Quick-filter city pinning.
+- Color-blind-safe palette switcher.
+- Locale / timezone switcher.
+- Audio cue customizer.
+- Keyboard shortcut customizer.
+- Screenshot / clipshare tool.
+- Notification digest email.
+- Two-step Owner directive confirmation.
+- Multi-Owner read-only mode.
+- Apprentice → Journeyman milestone badges.
+- Principle export to PDF.
+- Pair-trade signal visualizer.
+- Orderbook replay viewer.
+- Fill-quality sparkline per venue.
+- Venue-rotation configurator.
+- Slice randomization tuner.
+- Portfolio-Optimizer what-if sandbox.
+- Strategy family tournament bracket.
+- Agent performance leaderboard.
+- Agent retirement rationale template.
+- Regime-aware risk-limit overrides.
+- Dream-Collective session join widget.
+- Market-Within (L19) book viewer.
+- AIX (L23) wallet dashboard.
+- Ceremony calendar.
+- Epoch transition viewer.
+- Idea Genealogy tree view.
+- Paradox (L38) triage queue.
+- Metacognition (L40) critique inbox.
+- Eris war-game scoreboard.
+- Hidden-Hand (L39) log (redacted).
+- Chimera-Forge scenario gallery.
+- Dark-Forest fingerprint monitor.
+- Moral-Horizon freeze preview.
+- Latency-Pain heatmap.
+- Temporal-Seal anchoring history.
+- Motherseed readiness checker.
+- Universe curriculum progress bar.
+- Adversarial-Colosseum leaderboard.
+- Overfitting detector badge on each Principle.
+- DSR / PBO mini-gauge per strategy.
+- CPCV split visualizer.
+- Board meeting minutes markdown download.
+- Signature-verification status per envelope.
+- Time-oracle drift ribbon.
+- Clock-skew alert feed.
+- Ritual ceremony catalog.
+- City auras toggle.
+- Full-screen focus mode for any chamber.
+- Agent duel history.
+- Owner-walkabout cooldown indicator.
+- Emergency-stop drill mode.
+- NATS topic explorer.
+- ClickHouse ad-hoc query panel.
+- Neo4j Cypher cheat sheet.
+- Qdrant similarity debugger.
+- Redis working-memory inspector.
+- MinIO object browser.
+- S3 archive retrieval UI.
+- Advancement review queue.
+- Board-Meeting attendance tracker.
+- Retired-agent memorial wall.
+- Ecosystem uptime ribbon.
+- Last-Question (L48) reflections feed.
+- Silent-Vault reverence card.
+- Self-Healing (L9 Narcissus) proposal queue.
+- Polymath Protocol port starter template.
+- Federation (L30) insight-trade log.
+- Genesis-Day anniversary card.

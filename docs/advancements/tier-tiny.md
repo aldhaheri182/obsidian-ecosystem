@@ -1,0 +1,105 @@
+# Advancement Tier — Tiny (99)
+
+Cosmetics, micro-optimizations, UX polish.
+
+Examples (non-exhaustive; the full catalog is maintained as issues under the `advancement-tiny` label):
+- Agent breath animation
+- Footstep sounds
+- Notification orbs
+- Memory dust particles
+- Street names and signage
+- Agent Graveyard fireflies
+- Idle animations (eye blink, hand flex)
+- Weather-specific cursor
+- Building lights flicker on panel open
+- Tooltip typography refinement
+- Aurora hue-shift during drawdowns
+- Day/night dusk gradient richness
+- Chamber glass fingerprints
+- Seat-scuff wear on desks
+- Subtle floor reflections
+- Dust-mote density scaling
+- Idle camera micro-orbit
+- Context-aware haptic feedback (if supported)
+- Smoothed Emergency-Stop tooltip
+- Reverse-scroll-wheel affordance
+- Glass panel breath (1% alpha wobble)
+- Agent badge-shimmer on publish
+- Chamber door open/close micro-chime
+- Theming: Dreamtime palette auto-swap
+- Console-command autocomplete polish
+- Risk-ring pulse speed scaling with VIX
+- Principle-node glyph typography
+- Audio duck during alerts
+- Keyboard shortcut cheat-sheet
+- Logbook auto-scroll pause-on-hover
+- Sidebar resize memory between sessions
+- Mini-map lens hover preview
+- Motion-reduce accessibility toggle
+- High-contrast accessibility toggle
+- Screen-reader labels on every live region
+- Icon set consolidation to lucide-only
+- Loading skeleton for panel first paint
+- Soft corner radii across all cards
+- Grid snap for overlay dragging
+- Ghost trails on packet arcs
+- Principle bookmark pins
+- Board-meeting seat arrangement polish
+- Advancement Orb re-entry glow
+- Agent-Graveyard inscription typography
+- Clock-tower second-hand jitter on drift
+- City icon hover pop-out
+- Stars-layer parallax depth
+- Nebula cloud slow drift
+- Fog volumetric thickening during panic
+- Breadcrumb separator shape audit
+- Cursor trail on click
+- Advancement bell decay tuning
+- Subtle sparkline-tooltip snap
+- Sidebar section collapse transitions
+- Search highlight underline
+- Minified monospace numerics
+- Agent name-plate backplate tune
+- Emergency-stop pulse speed on hold
+- "OWNER PRESENT" penthouse light
+- Dreamtime piano pad sustain length
+- Rain droplet splash pixel rounding
+- Firefly color warmth shift with season
+- City aura blur radius scaling
+- Board memo paper grain texture
+- Gold-Node mint spark density
+- Signal chip glow on publish
+- Tape row zebra striping
+- Heartbeat dot latency coloring
+- Latency histogram axis tick shortening
+- ClickHouse count badge animation
+- NATS state chip pulse
+- Owner walkabout path highlight
+- Agent capsule shadow softness
+- Weather-clock joint day/night
+- Tooltip delay standardization
+- Panel close X hit area expansion
+- Scroll-shadow top/bottom fades
+- Button click depress 1 px
+- Icon-only-until-hover side-nav option
+- Breathing status chip wattage
+- Small-screen graceful fallback
+- Font weight scale audit
+- Spacing scale (4 px) enforcement lint
+- Animation prefers-reduced-motion
+- Code block copy-button polish
+- Log entry relative-time recompute
+- Alert banner stagger in
+- Agent face freckle randomness
+- Night-sky star twinkle curve
+- Ticker tape Doppler blur
+- Retired-agent sepia tint
+- Principle citation spark edge
+- Sleep state Z animation
+- Dream state aurora wash
+- Grid fade with distance
+- Floor inlay corner chamfer
+- Emergency-stop "are you sure" typography
+- Packet trail color warm end
+- Footprint dust kick up
+- Focus-ring color system-wide

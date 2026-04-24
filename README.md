@@ -16,19 +16,40 @@ Next milestone: **M1 — Memory Fabric** (GitHub issue #22). NOT started
 without owner go-ahead.
 
 See `docs/milestones/M0-walking-skeleton.md` for the M0 record. See
-`docs/specification.md` for the long-horizon architectural spec.
+`docs/WHITEPAPER.md` for the long-horizon architectural spec (v1.0 — Final).
+
+## Deep index — the entire specification
+
+**Master whitepaper:** [`docs/WHITEPAPER.md`](docs/WHITEPAPER.md) — abstract, TOC, final note.
+
+**Sectional whitepaper (21 files):** [`docs/whitepaper/`](docs/whitepaper/)
+- [01-philosophy](docs/whitepaper/01-philosophy.md) · [02-architecture](docs/whitepaper/02-architecture.md) · [03-cities](docs/whitepaper/03-cities.md) · [04-hierarchy](docs/whitepaper/04-hierarchy.md) · [05-memory](docs/whitepaper/05-memory.md) · [06-bus](docs/whitepaper/06-bus.md) · [07-agent-runtime](docs/whitepaper/07-agent-runtime.md) · [08-agent-directory](docs/whitepaper/08-agent-directory.md) · [09-advancements](docs/whitepaper/09-advancements.md) · [10-layers](docs/whitepaper/10-layers.md) · [11-ui](docs/whitepaper/11-ui.md) · [12-schemas](docs/whitepaper/12-schemas.md) · [13-risk](docs/whitepaper/13-risk.md) · [14-roadmap](docs/whitepaper/14-roadmap.md) · [15-stack](docs/whitepaper/15-stack.md) · [16-repo](docs/whitepaper/16-repo.md) · [17-acceptance](docs/whitepaper/17-acceptance.md) · [18-gating](docs/whitepaper/18-gating.md) · [19-gaps](docs/whitepaper/19-gaps.md) · [20-glossary](docs/whitepaper/20-glossary.md) · [21-appendices](docs/whitepaper/21-appendices.md)
+
+**Per-city specs (11):** [`docs/cities/`](docs/cities/) — one file per city, districts + agents + C-suite + visual metaphor + Command Center chamber.
+
+**Per-layer specs (L10–L49):** [`docs/layers/`](docs/layers/) — one file per conceptual layer beyond the eight base cities.
+
+**Cross-cutting:**
+- [`docs/agents/DIRECTORY.md`](docs/agents/DIRECTORY.md) — all 150+ agents.
+- [`docs/memory/FABRIC.md`](docs/memory/FABRIC.md) — memory architecture.
+- [`docs/risk/FRAMEWORK.md`](docs/risk/FRAMEWORK.md) — Risk Overlord + circuit breakers.
+- [`docs/ui/CINEMATIC_SPEC.md`](docs/ui/CINEMATIC_SPEC.md) — v1 visualization.
+- [`docs/COMMAND_CENTER.md`](docs/COMMAND_CENTER.md) — MV 3D Interactive Command Center (Next.js + React Three Fiber rebuild).
+- [`docs/schemas/MESSAGE_SCHEMAS.md`](docs/schemas/MESSAGE_SCHEMAS.md) — every bus message.
+- [`docs/acceptance/TEST_SUITE.md`](docs/acceptance/TEST_SUITE.md) — M0→M8 + MV acceptance.
+- [`docs/gaps/FORTY_TWO_CATEGORIES.md`](docs/gaps/FORTY_TWO_CATEGORIES.md) — 42 deep architecture gaps.
+- [`docs/advancements/`](docs/advancements/) — Tiny / Small / Medium / Big / Mega / Layers tier catalogs (526 advancements).
 
 ## Repository layout
 
-See [Part 2 of the specification](docs/specification.md) for the full layout. In short:
-
-- `proto/` — Protobuf message schemas (the wire contract)
-- `core/` — foundational crates and services (ledger, bus, tape, time)
-- `agents/` — agent implementations, organized by language and city
-- `cities/` — per-city container/compose configurations
-- `visualization/` — Svelte + PixiJS observatory UI
-- `tests/` — integration, chaos, and fixtures
-- `docs/` — specification, milestones, decisions, runbooks
+- `proto/` — Protobuf message schemas (the wire contract).
+- `core/` — foundational crates and services (ledger, bus, tape, time).
+- `agents/` — agent implementations, organized by language and city.
+- `cities/` — per-city container/compose configurations.
+- `visualization/` — Svelte + PixiJS + Three.js observatory UI (v1).
+- `command-center/` — Next.js 14 + React Three Fiber rebuild (MV).
+- `tests/` — integration, chaos, and fixtures.
+- `docs/` — the complete spec: whitepaper + cities + layers + advancements + gaps + agents + memory + risk + ui + schemas + acceptance + decisions + runbooks.
 
 ## Build principles
 

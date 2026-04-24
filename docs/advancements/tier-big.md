@@ -1,0 +1,108 @@
+# Advancement Tier — Big (100)
+
+Transformative features.
+
+- Parallel Universe Mode (alternate-history replays as first-class).
+- Agent-Generated Strategy Papers (submitted to Mnemosyne).
+- DAO Governance (formal on-chain voting for non-critical decisions).
+- Economic Singularity Detector.
+- Multi-Planet Simulator (global-market simultaneously simulated).
+- Sentience Scale (a diagnostic, not a claim).
+- Open Knowledge Library (public-facing Gold-Node browser).
+- Civil Society of Agents (formal grievance process).
+- Polymath Ports (at least 3 domain-adapted ecosystems).
+- Cross-Ecosystem Federation.
+- Insight Trading Exchange.
+- Strategy Retirement Ceremonies.
+- Agent Inheritance (resurrected agent inherits mentor's book).
+- Owner Legacy Forge (L13) operational.
+- Ethics Council public transcripts.
+- Philosophical-Engine evolution ledger.
+- Memetic-Immune antibody factory.
+- Temporal-Seal chained-chain (multi-chain anchoring).
+- Motherseed federation handoff.
+- Genesis-Protocol child bootstrap.
+- Omega-Point snapshotting.
+- Paradox integration engine (L38 upgrade).
+- Metacognitive hierarchy expansion to all cities.
+- Dream of the System annual ceremony.
+- Xenopsychology archetype production.
+- Aesthetic-Engine rubric v2 (learned weights).
+- Moral-Horizon freeze handling.
+- Strategy-Babel catalog full sweep.
+- Entropy-Engine retirement trigger.
+- Idea-Genealogy public lineage browser.
+- Ritual-Engine year-long arc.
+- Dark-Forest policy variants.
+- Memetic immune public advisory.
+- Inter-Agent Language audit.
+- Formal verification of Risk Overlord.
+- Formal verification of Ledger append.
+- Formal verification of NATS signing.
+- Quantum-resistant signature migration plan.
+- Zero-knowledge performance proofs (L30).
+- Post-quantum key rotation ceremony.
+- Owner-Agent Singularity optional module.
+- Board meeting simulcast.
+- Civic voting interface.
+- Economic-Singularity kill switch.
+- DAO treasury accounting.
+- AIX to fiat conversion ban enforcement.
+- Regulatory-reporting auto-filings.
+- Whistleblower protection workflow.
+- Ethics Council external advisor slot.
+- Reality Check Node at every city.
+- Chimera-Forge alien-market library.
+- Dream-Collective eternal-session support.
+- Adversarial-Colosseum annual Championship.
+- Eris quarterly war-game schedule.
+- Inverse Civilization expansion.
+- Federation insight-arbitrage limits.
+- External agent quarantine v2.
+- Stargate immigration tiers.
+- Physical actuator control (drones) w/ hw-key.
+- Energy-dispatch sandboxed demo.
+- Shipping-GPS integration.
+- Factory IoT integration.
+- Owner's Hidden Hand archive.
+- Latency-Pain kill-switch.
+- Global CEO delegation tree.
+- Board-to-Board inter-city memo.
+- Reactor-style UI mega-panel.
+- Infinite-scroll civilization timeline.
+- 11-chamber MV front-end live (Command Center).
+- Multi-owner tenancy.
+- Per-owner cost accounting.
+- Federation revenue share.
+- External strategy bounty program.
+- Alumni agents (retired, invited back as mentors).
+- Apprenticeship program.
+- Oracle-tier agent ceremony.
+- Civilization Epoch rollover fireworks.
+- Annual public report.
+- Private quarterly report.
+- Long-form narrative auto-generator.
+- Insider-risk monitor.
+- Supply-chain SBOM + attestations.
+- Hardware-wallet Owner signing.
+- Multi-jurisdiction compliance engine.
+- Cross-market settlement tracker.
+- Liquidity-stress scenario library.
+- Flash-crash simulation suite.
+- Circuit-breaker rehearsal.
+- Fill-price audit comparison.
+- Implementation-shortfall attribution.
+- Transaction-cost surface fitting.
+- Portfolio attribution to signal / regime.
+- Performance attribution to agent.
+- Retired-strategy alumni data tracking.
+- Silent-Vault write ceremony (Owner-only).
+- Last-Question annual reflection.
+- Eschaton Protocol drill.
+- Motherseed compress-restore rehearsal.
+- Geopolitical shock runbook.
+- Regulatory shock runbook.
+- Exchange-outage runbook.
+- NATS partition runbook.
+- Owner-unreachable runbook.
+- Black-swan rehearsal day.

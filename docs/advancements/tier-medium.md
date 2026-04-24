@@ -1,0 +1,111 @@
+# Advancement Tier — Medium (100)
+
+New subsystems.
+
+- Adversarial Colosseum v1 (full adversarial tester tournament).
+- Agent University (Universal Curriculum, L16).
+- Meta-Learning Loop (agent reflections feed back to model tuning).
+- Full Causal World Model (Omega-Point foundation).
+- Agent-Human Negotiation Interface.
+- Reality Check Node (external-world consistency check).
+- Semantic Search v2 (hybrid graph + vector + keyword).
+- Deflated Sharpe + PBO pipeline.
+- CPCV engine with purging + embargo.
+- Regime-aware capital-allocation surface.
+- Correlation-aware signal blender.
+- Live Portfolio Optimizer with constraint debugger.
+- Execution-slicer regime profiles.
+- Venue-selection policy engine.
+- Fill-quality cost allocator.
+- Dream Room determinism enforcement.
+- Knowledge-Graph lineage API.
+- Internal Economy (AIX) minting ledger.
+- Resource auction house.
+- Prediction Market (Market-Within).
+- Federation handshake engine.
+- Temporal Seal anchoring service.
+- Idea Genealogy DAG API.
+- Paradox integration detector.
+- Metacognition critique engine.
+- Eris war-game director.
+- Chimera Forge GAN pipeline.
+- Chimera Forge diffusion pipeline.
+- Alien-rule universe simulator.
+- Memetic Immune quarantine service.
+- Antibody agent class.
+- Adaptive-UI telemetry layer.
+- Board Meeting orchestrator.
+- Meeting-minutes synthesizer (LLM).
+- Causal Auditor v2 (permutation + counterfactual).
+- Paper-Replicator LLM pipeline.
+- Feature-Ideation dashboard.
+- Hypothesis-Generator orchestrator.
+- Signal registry + deprecation timeline.
+- Retirement-of-agent ceremony.
+- Immortality Vault retrieval service.
+- Resurrection workflow.
+- Motherseed generator v1.
+- Motherseed restore validator.
+- Geopolitical/regulatory watcher.
+- Compliance filing generator.
+- Ethical framework registry (L25).
+- Philosophical-Engine scoring service.
+- Entropy-Engine trajectory predictor.
+- Strategy-Babel catalog explorer.
+- Xenopsychology archetype lab.
+- Aesthetic-Engine rubric scorer.
+- Moral-Horizon detector.
+- Owner's Hidden Hand envelope handler.
+- Latency-Pain monitor.
+- Ritual-Engine scheduler.
+- Dark-Forest randomization controller.
+- Adversarial-Colosseum leaderboard.
+- Post-mortem RED incident generator.
+- Drill simulator (chaos runner).
+- Full-stack chaos engineering harness.
+- Property-based test framework for envelopes.
+- Contract-testing cross-language harness.
+- Fuzz harness for envelope parsing.
+- Golden-file regression for ledger entries.
+- Runbook auto-generator from incidents.
+- SLA/SLO computation service.
+- Predictive-maintenance forecaster.
+- ArgoCD deployment pipeline.
+- Vault PKI + NATS JWT issuer.
+- Security-sentinel (Falco integration).
+- Dependency-auditor CVE scanner.
+- Resource-balancer auto-scaler.
+- Pod autoscaling heuristics.
+- Multi-region failover plan.
+- Cold-archive retrieval SLA.
+- Disaster-recovery rehearsal.
+- Observability stack (Prometheus + Grafana + Loki + Vector + Jaeger).
+- SRE on-call rotation.
+- Incident-severity classifier.
+- Knowledge-Graph schema versioning.
+- Ontology editor.
+- Principle challenge / appeal workflow.
+- Signature-verification metrics dashboard.
+- Agent-registry audit queue.
+- Owner directive audit.
+- Walkabout mode read-only enforcement.
+- Cooldown protocol enforcer.
+- 24-hour intervention lockout.
+- Regime-change alert pipeline.
+- Correlation-spike detector.
+- Self-impact (Mirror Agent) calculator.
+- Mirror-Agent feedback loop controller.
+- Reaper policy engine.
+- Void-Agent confidence curve.
+- Data-Vendor cost tracker.
+- Alpaca paper → live switcher.
+- IBKR broker interface.
+- News-feed ingestion normalizer.
+- Social-feed sentiment pipeline.
+- Satellite-imagery processing pipeline.
+- Human-expert query router.
+- IoT sensor ingestion pipeline.
+- Physical-actuator multi-sig workflow.
+- Board memo registry.
+- Principle publication workflow.
+- Gold Node minting ceremony.
