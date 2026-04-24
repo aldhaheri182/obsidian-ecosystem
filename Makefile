@@ -65,10 +65,6 @@ build-py: ## Install all Python agent dependencies.
 	$(PY) -m pip install -e agents/python/signal-blender
 	$(PY) -m pip install -e agents/python/paper-executor
 
-.PHONY: build-viz
-build-viz: ## Build the visualization SPA.
-	cd visualization && $(NPM) ci && $(NPM) run build
-
 # =====================================================================
 # Tests
 # =====================================================================
@@ -126,22 +122,16 @@ protos-py: ## Regenerate Python proto bindings into core/obsidian-agent-py/obsid
 		proto/order.proto proto/risk.proto proto/heartbeat.proto
 	@echo "--- generated files ---" && ls core/obsidian-agent-py/obsidian_agent/_proto/
 
-.PHONY: protos-viz
-protos-viz: ## Regenerate visualization proto bindings.
-	cd visualization && $(NPM) run gen:proto
-
 # =====================================================================
 # Lint / format
 # =====================================================================
 
 .PHONY: fmt
-fmt: ## Format Rust, Python, TypeScript.
+fmt: ## Format Rust, Python.
 	$(CARGO) fmt --all
 	$(PY) -m ruff format core agents tests scripts
-	cd visualization && $(NPM) run fmt
 
 .PHONY: lint
-lint: ## Lint Rust, Python, TypeScript.
+lint: ## Lint Rust, Python.
 	$(CARGO) clippy --workspace --all-targets -- -D warnings
 	$(PY) -m ruff check core agents tests scripts
-	cd visualization && $(NPM) run lint

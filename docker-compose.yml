@@ -6,7 +6,6 @@
 #   Infrastructure: nats, redis, clickhouse
 #   Core services: chronos (time-oracle), tape-recorder
 #   Aletheia city: aletheia-core (Rust), aletheia-logic (Python)
-#   UI: visualization (nginx)
 # Memory budget: ~5.5 GB. Fits on the 64 GB Linux VM with headroom.
 # ============================================================================
 
@@ -192,23 +191,6 @@ services:
       resources:
         limits:
           memory: 512m
-
-  # ---------- UI ----------
-
-  visualization:
-    build:
-      context: ./visualization
-      args:
-        VITE_NATS_WS_URL: ws://localhost:18080
-    ports:
-      - "18000:80"
-    depends_on:
-      nats:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 256m
 
   # ---------- M1 Memory Fabric (issue #22) ----------
 
