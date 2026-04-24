@@ -39,7 +39,9 @@ rocksdb-data/
 clickhouse-data/
 redis-data/
 nats-data/
-**/data/
+# (The previous `**/data/` catch-all also excluded source-code `data/`
+# directories under the command-center — e.g. mockData.ts + openclawRooms.ts.
+# Keep explicit volume names only.)
 !tests/fixtures/
 
 # Protobuf generated
