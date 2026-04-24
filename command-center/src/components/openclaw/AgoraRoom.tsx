@@ -26,6 +26,7 @@ export function AgoraRoom({ room }: { room: RoomDef }) {
       <AgoraCrew accent={room.accent} />
       <AgoraDrones accent={room.accent} />
       <AgoraTable accent={room.accent} />
+      <AgoraMagic accent={room.accent} />
       <AgoraPrompt roomId={room.id} label={room.promptLabel} accent={room.accent} />
     </group>
   );
@@ -1423,6 +1424,240 @@ function AgoraTable({ accent }: { accent: string }) {
         position={[0, 1.1, 0]}
       />
     </group>
+  );
+}
+
+// ============================================================================
+// AI MAGIC LAYER — spell arcs, rune circles, thought glyphs, beam rain
+// ============================================================================
+const MAGIC_SPOTS: Array<{ x: number; z: number }> = [
+  { x:  1.5, z:  0   },
+  { x:  0,   z:  1.5 },
+  { x: -1.5, z:  0   },
+  { x:  0,   z: -1.5 },
+];
+
+function AgoraMagic({ accent }: { accent: string }) {
+  return (
+    <group>
+      {MAGIC_SPOTS.map((s, i) => (
+        <group key={i}>
+          <SpellArc x={s.x} z={s.z} seed={i} accent={accent} />
+          <RuneCircle x={s.x} z={s.z} seed={i} accent={accent} />
+          <ThoughtGlyphs x={s.x} z={s.z} seed={i} accent={accent} />
+        </group>
+      ))}
+      <BeamRain accent={accent} />
+      <AuraShockwave accent={accent} />
+    </group>
+  );
+}
+
+// Jagged glowing line from each robot's antenna up to the table centre.
+function SpellArc({
+  x, z, seed, accent,
+}: { x: number; z: number; seed: number; accent: string }) {
+  const geo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(8 * 3), 3));
+    return g;
+  }, []);
+  const mat = useMemo(
+    () =>
+      new THREE.LineBasicMaterial({
+        color: new THREE.Color(accent),
+        transparent: true,
+        opacity: 0.75,
+        toneMapped: false,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    [accent],
+  );
+  const lineObj = useMemo(() => new THREE.Line(geo, mat), [geo, mat]);
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime + seed * 0.7;
+    const pos = geo.attributes.position as THREE.BufferAttribute;
+    const start = new THREE.Vector3(x * 0.9, 1.25, z * 0.9);
+    const end = new THREE.Vector3(0, 0.95, 0);
+    for (let i = 0; i < 8; i++) {
+      const u = i / 7;
+      const p = start.clone().lerp(end, u);
+      if (i > 0 && i < 7) {
+        const j = 0.09 + (1 - u) * 0.06;
+        p.x += Math.sin(t * 22 + i * 3.1) * j;
+        p.y += Math.sin(t * 18 + i * 2.7) * j * 0.6;
+        p.z += Math.cos(t * 25 + i * 3.5) * j;
+      }
+      pos.setXYZ(i, p.x, p.y, p.z);
+    }
+    pos.needsUpdate = true;
+    const base = 0.55 + Math.sin(t * 4) * 0.2;
+    mat.opacity = base + (Math.random() < 0.12 ? 0.35 : 0);
+  });
+
+  return <primitive object={lineObj} />;
+}
+
+// Rotating rune circle on the floor beneath each cube-robot.
+function RuneCircle({
+  x, z, seed, accent,
+}: { x: number; z: number; seed: number; accent: string }) {
+  const ring = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    if (!ring.current) return;
+    const dir = seed % 2 === 0 ? 1 : -1;
+    ring.current.rotation.y = clock.elapsedTime * (0.55 + seed * 0.08) * dir;
+  });
+  return (
+    <group ref={ring} position={[x, 0.028, z]}>
+      {/* Outer ring */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.5, 0.52, 56]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.7} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      {/* Inner thin ring */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.42, 0.428, 56]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.45} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      {/* 8 rune ticks around the outer ring */}
+      {Array.from({ length: 8 }).map((_, i) => {
+        const a = (i / 8) * Math.PI * 2;
+        return (
+          <mesh
+            key={i}
+            position={[Math.cos(a) * 0.48, 0.001, Math.sin(a) * 0.48]}
+            rotation={[-Math.PI / 2, 0, -a]}
+          >
+            <planeGeometry args={[0.1, 0.028]} />
+            <meshBasicMaterial color={accent} transparent opacity={0.95} toneMapped={false} />
+          </mesh>
+        );
+      })}
+      {/* 4 diamond notches on inner ring */}
+      {Array.from({ length: 4 }).map((_, i) => {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 8;
+        return (
+          <mesh
+            key={`d-${i}`}
+            position={[Math.cos(a) * 0.425, 0.002, Math.sin(a) * 0.425]}
+            rotation={[-Math.PI / 2, 0, -a + Math.PI / 4]}
+          >
+            <planeGeometry args={[0.04, 0.04]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.8} toneMapped={false} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// Two drifting "thought" glyph symbols above each robot, animated via refs.
+function ThoughtGlyphs({
+  x, z, seed, accent,
+}: { x: number; z: number; seed: number; accent: string }) {
+  const glyphs = useMemo(() => {
+    const pool = ['∑', '∇', 'λ', 'ψ', 'π', 'α', 'β', 'ξ', 'μ', 'σ', 'φ', '∂'];
+    return [
+      pool[(seed * 3) % pool.length],
+      pool[(seed * 3 + 5) % pool.length],
+      pool[(seed * 3 + 9) % pool.length],
+    ];
+  }, [seed]);
+  const refs = useRef<Array<HTMLDivElement | null>>([]);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime + seed * 0.6;
+    refs.current.forEach((el, i) => {
+      if (!el) return;
+      const period = 2.6 + i * 0.4;
+      const phase = ((t / period + i * 0.33) % 1);
+      const ty = -phase * 66;
+      const tx = Math.sin(phase * Math.PI * 2 + i + seed) * 10;
+      el.style.transform = `translate(${tx}px, ${ty}px) scale(${0.55 + phase * 0.55})`;
+      el.style.opacity = String(Math.sin(phase * Math.PI).toFixed(3));
+    });
+  });
+  return (
+    <group>
+      {glyphs.map((g, k) => (
+        <Html
+          key={k}
+          position={[x, 1.32, z]}
+          center
+          distanceFactor={5.5}
+          occlude={false}
+          style={{ pointerEvents: 'none' }}
+        >
+          <div
+            ref={(el) => { refs.current[k] = el; }}
+            style={{
+              color: accent,
+              fontSize: 22,
+              fontWeight: 900,
+              fontFamily: 'Cinzel, serif',
+              textShadow: `0 0 12px ${accent}, 0 0 26px ${accent}88`,
+              opacity: 0,
+              willChange: 'transform, opacity',
+            }}
+          >
+            {g}
+          </div>
+        </Html>
+      ))}
+    </group>
+  );
+}
+
+// Matrix-style light motes falling down inside the central beam.
+function BeamRain({ accent }: { accent: string }) {
+  const refs = useRef<Array<THREE.Mesh | null>>([]);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    refs.current.forEach((m, i) => {
+      if (!m) return;
+      const period = 2.1 + (i % 3) * 0.45;
+      const phase = ((t / period + i * 0.12) % 1);
+      const y = 2.6 - phase * 2.2;
+      const angle = i * 0.85 + t * 0.18;
+      const rad = 0.08 + (i % 2) * 0.06;
+      m.position.set(Math.cos(angle) * rad, y, Math.sin(angle) * rad);
+      const mat = m.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.sin(phase * Math.PI) * 0.9;
+    });
+  });
+  return (
+    <group>
+      {Array.from({ length: 22 }).map((_, i) => (
+        <mesh key={i} ref={(el) => { refs.current[i] = el; }}>
+          <boxGeometry args={[0.03, 0.065, 0.008]} />
+          <meshBasicMaterial color={i % 4 === 0 ? '#ffffff' : accent} transparent opacity={0} toneMapped={false} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// A wide bright shockwave ring that fires outward from the table every
+// few seconds — like an "ai thought" broadcast reaching the whole room.
+function AuraShockwave({ accent }: { accent: string }) {
+  const ring = useRef<THREE.Mesh>(null);
+  const mat = useRef<THREE.MeshBasicMaterial>(null);
+  useFrame(({ clock }) => {
+    if (!ring.current || !mat.current) return;
+    const t = clock.elapsedTime;
+    const period = 4.5;
+    const phase = (t % period) / period;
+    const s = 0.5 + phase * 5;
+    ring.current.scale.set(s, s, 1);
+    mat.current.opacity = (1 - phase) * 0.55;
+  });
+  return (
+    <mesh ref={ring} position={[0, 0.034, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.75, 0.8, 72]} />
+      <meshBasicMaterial ref={mat} color={accent} transparent opacity={0} side={THREE.DoubleSide} toneMapped={false} />
+    </mesh>
   );
 }
 
