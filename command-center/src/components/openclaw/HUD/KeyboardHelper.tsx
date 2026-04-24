@@ -14,6 +14,9 @@ export function KeyboardHelper() {
       <Row k="SHIFT" label="RUN" />
       <Row k="E" label="INTERACT" />
       <Row k="CLICK" label="SELECT AGENT" />
+      <Row k="WHEEL" label="ZOOM" />
+      <Row k="+ / −" label="ZOOM IN / OUT" />
+      <Row k="0" label="RESET ZOOM" />
       <Row k="ESC" label="BACK" />
     </div>
   );

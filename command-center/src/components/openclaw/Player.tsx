@@ -87,6 +87,19 @@ export function Player() {
         if (openPanelRoomId) openPanel(null);
         selectAgent(null);
       }
+      // Zoom keys: +/= zoom in, -/_ zoom out, 0 reset to default
+      if (k === '+' || k === '=') {
+        e.preventDefault();
+        useOpenClawStore.getState().nudgeZoom(-0.08);
+      }
+      if (k === '-' || k === '_') {
+        e.preventDefault();
+        useOpenClawStore.getState().nudgeZoom(0.08);
+      }
+      if (k === '0') {
+        e.preventDefault();
+        useOpenClawStore.getState().setZoom(1);
+      }
       // TAB disabled: command map is the only view
     };
     const onUp = (e: KeyboardEvent) => {
@@ -98,11 +111,23 @@ export function Player() {
       if (k === 'shift') keys.shift = false;
       if (k === 'e') keys.e = false;
     };
+    // Mouse wheel — smooth proportional zoom. deltaY > 0 = scroll down
+    // = zoom out; deltaY < 0 = scroll up = zoom in.
+    const onWheel = (e: WheelEvent) => {
+      // Ignore if the wheel is over a scrollable HUD panel
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest && target.closest('[data-allow-scroll]')) return;
+      e.preventDefault();
+      const step = e.deltaY * 0.0015;
+      useOpenClawStore.getState().nudgeZoom(step);
+    };
     window.addEventListener('keydown', onDown);
     window.addEventListener('keyup', onUp);
+    window.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
+      window.removeEventListener('wheel', onWheel);
     };
   }, [keys, nearestRoomId, openPanelRoomId, openPanel, pushLog, selectAgent]);
 
@@ -264,12 +289,20 @@ export function Player() {
       m.scale.set(s, s, 1);
     });
 
-    // Command-map camera — fixed pulled-back strategy-game overview
-    // with a subtle breathing oscillation.
+    // Command-map camera — pulled-back strategy overview by default;
+    // scroll / +/- zooms in (down to ~0.18) toward the player's room.
+    // At full zoom-out the camera looks at (0,0,0); as zoom approaches
+    // 1.0 → 0.18 the look-target blends toward the player position so
+    // the zoom feels like "zoom into what I'm inspecting".
     const breathe = Math.sin(tSec * 0.7) * 0.12;
-    desiredCamPos.set(0, 32 + breathe, 22 + breathe * 0.5);
-    camera.position.lerp(desiredCamPos, 0.05);
-    camTarget.set(0, 0, 0);
+    const zoom = useOpenClawStore.getState().zoom;
+    // Blend factor: 0 at zoom=1, 1 at zoom=0.18
+    const blend = Math.min(1, Math.max(0, (1 - zoom) / (1 - 0.18)));
+    const tx = px * blend;
+    const tz = pz * blend;
+    desiredCamPos.set(tx + 0, 32 * zoom + breathe, tz + 22 * zoom + breathe * 0.5);
+    camera.position.lerp(desiredCamPos, 0.08);
+    camTarget.set(tx, 0, tz);
     camera.lookAt(camTarget);
   });
 

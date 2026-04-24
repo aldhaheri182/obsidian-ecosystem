@@ -60,6 +60,11 @@ interface OpenClawStore {
   setCameraMode: (m: CameraMode) => void;
   toggleCameraMode: () => void;
 
+  // camera zoom (command map) — 1 = pulled-back default, 0.18 = max zoom in
+  zoom: number;
+  setZoom: (z: number) => void;
+  nudgeZoom: (delta: number) => void;
+
   // discovery + toasts
   discoveredRooms: Set<string>;
   discoverRoom: (id: string) => void; // idempotent
@@ -115,6 +120,11 @@ export const useOpenClawStore = create<OpenClawStore>((set) => ({
   setCameraMode: (m) => set({ cameraMode: m }),
   toggleCameraMode: () =>
     set((s) => ({ cameraMode: s.cameraMode === 'explore' ? 'command' : 'explore' })),
+
+  zoom: 1,
+  setZoom: (z) => set({ zoom: Math.max(0.18, Math.min(1, z)) }),
+  nudgeZoom: (delta) =>
+    set((s) => ({ zoom: Math.max(0.18, Math.min(1, s.zoom + delta)) })),
 
   discoveredRooms: new Set<string>(),
   discoverRoom: (id) =>
