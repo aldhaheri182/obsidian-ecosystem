@@ -19,6 +19,8 @@
   import TimelineView from './lib/views/TimelineView.svelte';
   import GraveyardView from './lib/views/GraveyardView.svelte';
   import Hud from './lib/views/Hud.svelte';
+  import ViewTransition from './lib/views/ViewTransition.svelte';
+  import { startDreamtime, stopDreamtime, isDreamtime } from './lib/audio/music';
 
   const NATS_URL =
     (import.meta as any).env?.VITE_NATS_WS_URL ?? 'ws://localhost:18080';
@@ -37,6 +39,7 @@
     const prime = () => {
       primeAudio();
       setDrone('orbit');
+      if (isDreamtime()) startDreamtime(true);
       window.removeEventListener('pointerdown', prime);
       window.removeEventListener('keydown', prime);
     };
@@ -86,5 +89,6 @@
     <GraveyardView />
   {/if}
 
+  <ViewTransition />
   <Hud />
 </div>
