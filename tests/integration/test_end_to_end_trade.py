@@ -7,19 +7,30 @@ pipeline's MessageTypes appears on the Tape within a 60-second window of
 
 from __future__ import annotations
 
+import base64
 import time
+import urllib.parse
+import urllib.request
 from typing import Dict
 
 import pytest
-import urllib.request
-import urllib.parse
 
-CLICKHOUSE_URL = "http://obsidian:obsidian@localhost:18123"
+# ClickHouse HTTP endpoint. urllib.request refuses inline userinfo in http
+# URLs (only ftp), so we build an Authorization header instead.
+CLICKHOUSE_URL = "http://localhost:18123"
+CLICKHOUSE_USER = "obsidian"
+CLICKHOUSE_PASSWORD = "obsidian"
+_AUTH_HEADER = (
+    "Basic "
+    + base64.b64encode(f"{CLICKHOUSE_USER}:{CLICKHOUSE_PASSWORD}".encode()).decode()
+)
 
 
 def _ch_count(type_label: str) -> int:
     q = f"SELECT count() FROM obsidian.tape WHERE type = '{type_label}' FORMAT TabSeparated"
-    r = urllib.request.urlopen(f"{CLICKHOUSE_URL}/?query={urllib.parse.quote(q)}", timeout=5)
+    url = f"{CLICKHOUSE_URL}/?query={urllib.parse.quote(q)}"
+    req = urllib.request.Request(url, headers={"Authorization": _AUTH_HEADER})
+    r = urllib.request.urlopen(req, timeout=5)
     return int(r.read().decode().strip() or "0")
 
 

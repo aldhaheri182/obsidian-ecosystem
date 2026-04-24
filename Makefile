@@ -109,12 +109,25 @@ seed: ## Populate tests/fixtures with the bundled CSV.
 # =====================================================================
 
 .PHONY: proto
-proto: ## Regenerate Protobuf bindings for every language.
-	$(CARGO) build -p obsidian-bus  # build.rs drives prost-build
-	$(PY) -m grpc_tools.protoc -Iproto --python_out=core/obsidian-agent-py/obsidian_agent/_proto \
+proto: protos-rs protos-py ## Regenerate Protobuf bindings for every language.
+
+.PHONY: protos-rs
+protos-rs: ## Regenerate Rust proto bindings (build.rs drives prost-build).
+	$(CARGO) build -p obsidian-bus
+
+.PHONY: protos-py
+protos-py: ## Regenerate Python proto bindings into core/obsidian-agent-py/obsidian_agent/_proto/.
+	$(PY) -m pip install -q 'grpcio-tools>=1.60,<2' || true
+	mkdir -p core/obsidian-agent-py/obsidian_agent/_proto
+	$(PY) -m grpc_tools.protoc -Iproto \
+		--python_out=core/obsidian-agent-py/obsidian_agent/_proto \
 		--pyi_out=core/obsidian-agent-py/obsidian_agent/_proto \
 		proto/envelope.proto proto/market_data.proto proto/signal.proto \
 		proto/order.proto proto/risk.proto proto/heartbeat.proto
+	@echo "--- generated files ---" && ls core/obsidian-agent-py/obsidian_agent/_proto/
+
+.PHONY: protos-viz
+protos-viz: ## Regenerate visualization proto bindings.
 	cd visualization && $(NPM) run gen:proto
 
 # =====================================================================

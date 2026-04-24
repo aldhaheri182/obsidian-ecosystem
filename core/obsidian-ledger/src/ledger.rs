@@ -113,15 +113,16 @@ impl RocksLedger {
                 let pk_bytes = signing_key.verifying().as_bytes().to_vec();
                 db.put_cf(meta_cf, META_KEY_PUBKEY, &pk_bytes)?;
 
-                let genesis_unsigned = UnsignedEntry {
-                    entry_id: uuid::Uuid::now_v7(),
-                    timestamp_ns: now_ns(),
-                    entry_type: EntryType::Genesis,
-                    payload: format!("genesis:{}", config.agent_id).into_bytes(),
-                    causal_links: Vec::new(),
-                    confidence: 1.0,
-                    model_version: "genesis-0.1.0".into(),
-                };
+                // Genesis MUST be deterministic per agent — two replays of
+                // the same fixture must produce bit-identical genesis hashes.
+                // So we pin timestamp to 0 and derive entry_id from
+                // (entry_type, 0, payload, model_version) via UUID v5.
+                let genesis_unsigned = UnsignedEntry::new_deterministic(
+                    EntryType::Genesis,
+                    0,
+                    format!("genesis:{}", config.agent_id).into_bytes(),
+                    "genesis-0.1.0",
+                );
                 let prev_hash = [0u8; 32];
                 let canonical =
                     canonical_bytes(0, &prev_hash, &genesis_unsigned)?;

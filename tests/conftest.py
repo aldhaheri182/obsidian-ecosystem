@@ -9,6 +9,14 @@ import pytest
 pytest_plugins = []
 
 
+def pytest_configure(config):
+    """Register the ``acceptance`` marker so pytest stops emitting warnings."""
+    config.addinivalue_line(
+        "markers",
+        "acceptance: M0 acceptance-gate test — requires `make up` on the live stack.",
+    )
+
+
 @pytest.fixture(scope="session")
 def nats_ws_url() -> str:
     return "ws://localhost:18080"

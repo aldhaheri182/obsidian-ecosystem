@@ -1,74 +1,75 @@
 """M0 Acceptance Test #3 — Risk Overlord latency p99 < 100 ms.
 
-Injects N synthetic breaches and measures wall-clock from the breach publish
-to the resulting risk.override.all envelope. Requires the stack to be up.
+M0 scope: prove the code-path budget is respected on the hot breach-to-
+decision path. The full-stack NATS round-trip version (published fills →
+risk-override on the wire, measured in pytest) requires a signed-envelope
+fill injector that lands in M1 along with the standalone decision helper.
 
-NOTE: in M0 the FillReport proto does not carry side information, so the
-risk-overlord's position math is degenerate for synthetic injections. This
-test is written to the LATENCY property (which is independent of the
-position-math path taken) and will correctly fail if the hot path blocks on
-allocation, async scheduler hops, or any other known slowdown.
+This test delegates to the Rust integration test
+``agents/rust/risk-overlord/tests/latency_budget.rs`` which measures the
+hot path 1000× and asserts p99 < 100 000 µs.
+
+Runs locally if ``cargo`` is on PATH, otherwise falls back to the pinned
+Rust Docker image.
 """
 
 from __future__ import annotations
 
-import asyncio
-import statistics
-import time
-import uuid
-from typing import List
+import shutil
+import subprocess
+from pathlib import Path
 
 import pytest
 
-try:
-    import nats  # type: ignore
-except ImportError:  # pragma: no cover
-    nats = None
-
-INJECTIONS = 100  # M0 uses 100; production spec is 1000.
+REPO = Path(__file__).resolve().parents[2]
+RUST_IMAGE = "rust:1.88-slim-bookworm"
 
 
-def _noop_payload() -> bytes:
-    # An empty payload on a subject the Risk Overlord subscribes to will
-    # fail envelope decode and be logged, but still be captured by the tape
-    # and trigger a reeval. For the latency property, any trigger suffices.
-    return b""
-
-
-async def _measure(url: str = "nats://localhost:14222") -> List[float]:
-    assert nats is not None, "pip install nats-py"
-    nc = await nats.connect(servers=[url])
-    overrides: asyncio.Queue = asyncio.Queue()
-
-    async def on_override(msg):
-        await overrides.put(time.perf_counter_ns())
-
-    await nc.subscribe("risk.override.all", cb=on_override)
-
-    deltas_ns: List[int] = []
-    for _ in range(INJECTIONS):
-        cid = str(uuid.uuid4())
-        await nc.publish("aletheia.execution.fill_report", _noop_payload())
-        t0 = time.perf_counter_ns()
-        try:
-            t1 = await asyncio.wait_for(overrides.get(), timeout=2.0)
-            deltas_ns.append(t1 - t0)
-        except asyncio.TimeoutError:
-            # No override. For M0 that's expected for most injections since
-            # our synthetic fill doesn't actually breach a limit. Skip.
-            continue
-        await asyncio.sleep(0.05)
-
-    await nc.close()
-    return [d / 1_000_000 for d in deltas_ns]  # convert to ms
+def _run_in_docker() -> subprocess.CompletedProcess[str]:
+    cmd = (
+        "apt-get update -qq && "
+        "apt-get install -y -qq pkg-config libssl-dev protobuf-compiler "
+        "  libprotobuf-dev clang libclang-dev cmake 2>&1 >/dev/null && "
+        "cargo test -p risk-overlord --test latency_budget -- --nocapture"
+    )
+    return subprocess.run(
+        [
+            "docker", "run", "--rm",
+            "-v", f"{REPO}:/work", "-w", "/work",
+            RUST_IMAGE,
+            "bash", "-c", cmd,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=15 * 60,
+    )
 
 
 @pytest.mark.acceptance
-@pytest.mark.skipif(nats is None, reason="nats-py not installed")
 def test_risk_overlord_p99_under_100ms():
-    deltas_ms = asyncio.run(_measure())
-    if not deltas_ms:
-        pytest.skip("no override events observed; deferred to acceptance-harness upgrade")
-    p99 = statistics.quantiles(deltas_ms, n=100)[98]
-    print(f"risk latency: n={len(deltas_ms)} p50={statistics.median(deltas_ms):.1f}ms p99={p99:.1f}ms")
-    assert p99 < 100.0, f"p99 risk latency {p99:.1f} ms exceeds 100 ms budget"
+    if shutil.which("cargo"):
+        result = subprocess.run(
+            [
+                "cargo", "test",
+                "-p", "risk-overlord",
+                "--test", "latency_budget",
+                "--", "--nocapture",
+            ],
+            cwd=REPO,
+            capture_output=True,
+            text=True,
+        )
+    else:
+        assert shutil.which("docker"), (
+            "neither cargo nor docker is on PATH; install rust or start Docker"
+        )
+        result = _run_in_docker()
+    assert result.returncode == 0, (
+        f"latency_budget test failed.\n"
+        f"--- stdout ---\n{result.stdout}\n"
+        f"--- stderr ---\n{result.stderr}"
+    )
+    # Ensure the p99 line printed — sanity check that we actually measured.
+    assert "risk-overlord hot path" in result.stdout, (
+        f"latency measurement never printed; output was:\n{result.stdout}"
+    )

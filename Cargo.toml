@@ -61,7 +61,7 @@ rand_core = "0.6"
 rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 
 # --- identifiers / time ---
-uuid = { version = "1.11", features = ["v7", "serde"] }
+uuid = { version = "1.11", features = ["v5", "v7", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 
 # --- observability ---
