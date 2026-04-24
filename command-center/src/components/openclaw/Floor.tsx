@@ -19,23 +19,58 @@ export function Floor() {
       <Corridors />
       <OuterShell />
       <InternalPartitions />
+      <CornerPylons />
+      <DeepFogBand />
     </group>
   );
 }
 
-// Platform the building sits on — slightly larger than the building,
-// with a faint grid around the outside (gives isometric depth cues).
+// Platform the building sits on — much larger than the building to
+// convey massive scale, with nested chevron rims, concentric rings, and
+// a faint grid around the outside (gives isometric depth cues).
 function Platform() {
-  const W = (WORLD_BOUNDS.maxX - WORLD_BOUNDS.minX) + 16;
-  const D = (WORLD_BOUNDS.maxZ - WORLD_BOUNDS.minZ) + 14;
+  const W = (WORLD_BOUNDS.maxX - WORLD_BOUNDS.minX) + 26;
+  const D = (WORLD_BOUNDS.maxZ - WORLD_BOUNDS.minZ) + 24;
+  const R = Math.max(W, D) / 2;
+
+  // Pulsing chevron rim — subtle breathing of the outer neon rings
+  const rimA = useRef<THREE.MeshStandardMaterial>(null);
+  const rimB = useRef<THREE.MeshStandardMaterial>(null);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (rimA.current) rimA.current.emissiveIntensity = 1.4 + Math.sin(t * 0.8) * 0.35;
+    if (rimB.current) rimB.current.emissiveIntensity = 1.0 + Math.sin(t * 0.8 + 1.2) * 0.25;
+  });
+
+  // Chevron teeth positioned around perimeter — 40 of them, alternating
+  // outward/inward direction for a mechanical "installation plate" feel.
+  const chevrons = useMemo(() => {
+    const arr: Array<{ pos: [number, number, number]; rot: number }> = [];
+    const count = 56;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2;
+      // Squircle-ish placement: clamp to rectangle-ish outline
+      const cx = Math.cos(a) * (W / 2 - 1.0);
+      const cz = Math.sin(a) * (D / 2 - 1.0);
+      arr.push({ pos: [cx, 0.02, cz], rot: -a });
+    }
+    return arr;
+  }, [W, D]);
+
   return (
     <group>
-      <mesh receiveShadow position={[0, -0.4, 0]}>
-        <boxGeometry args={[W, 0.4, D]} />
-        <meshStandardMaterial color="#060912" roughness={0.8} metalness={0.25} />
+      {/* Deep base — thicker, slight bevel */}
+      <mesh receiveShadow position={[0, -0.5, 0]}>
+        <boxGeometry args={[W, 0.5, D]} />
+        <meshStandardMaterial color="#05080f" roughness={0.82} metalness={0.32} />
+      </mesh>
+      {/* Mid platform shelf (visual step, creates depth) */}
+      <mesh receiveShadow position={[0, -0.18, 0]}>
+        <boxGeometry args={[W - 2.2, 0.08, D - 2.2]} />
+        <meshStandardMaterial color="#0a1020" roughness={0.7} metalness={0.45} />
       </mesh>
       <Grid
-        position={[0, -0.18, 0]}
+        position={[0, -0.12, 0]}
         args={[W - 1, D - 1]}
         cellSize={1}
         cellThickness={0.5}
@@ -43,14 +78,118 @@ function Platform() {
         sectionSize={5}
         sectionThickness={1.1}
         sectionColor="#3ca9ff"
-        fadeDistance={70}
-        fadeStrength={1.8}
+        fadeDistance={95}
+        fadeStrength={1.6}
         infiniteGrid={false}
       />
-      {/* Outer edge neon ring on the platform */}
-      <mesh position={[0, 0.0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[Math.max(W, D) / 2 - 0.5, Math.max(W, D) / 2 - 0.3, 6]} />
-        <meshStandardMaterial color="#4ECDC4" emissive="#4ECDC4" emissiveIntensity={1.3} side={THREE.DoubleSide} transparent opacity={0.55} toneMapped={false} />
+      {/* Two concentric outer neon rings (chevron rim) */}
+      <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[R - 0.9, R - 0.65, 6]} />
+        <meshStandardMaterial ref={rimA} color="#4ECDC4" emissive="#4ECDC4" emissiveIntensity={1.5} side={THREE.DoubleSide} transparent opacity={0.65} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[R - 2.1, R - 1.95, 6]} />
+        <meshStandardMaterial ref={rimB} color="#7AD7FF" emissive="#7AD7FF" emissiveIntensity={1.0} side={THREE.DoubleSide} transparent opacity={0.45} toneMapped={false} />
+      </mesh>
+      {/* Chevron teeth along the perimeter */}
+      {chevrons.map((c, i) => (
+        <mesh key={i} position={c.pos} rotation={[-Math.PI / 2, 0, c.rot]}>
+          <planeGeometry args={[0.35, 0.11]} />
+          <meshBasicMaterial color={i % 3 === 0 ? '#FFD166' : '#4ECDC4'} transparent opacity={0.85} toneMapped={false} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// Four corner pylons — tall illuminated beacons marking the facility
+// footprint. Read instantly on the isometric camera.
+function CornerPylons() {
+  const beacons = useRef<Array<THREE.MeshBasicMaterial | null>>([]);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    beacons.current.forEach((m, i) => {
+      if (!m) return;
+      m.opacity = 0.55 + Math.abs(Math.sin(t * 1.5 + i * 0.9)) * 0.45;
+    });
+  });
+
+  const W = (WORLD_BOUNDS.maxX - WORLD_BOUNDS.minX) + 18;
+  const D = (WORLD_BOUNDS.maxZ - WORLD_BOUNDS.minZ) + 16;
+  const spots: Array<[number, number]> = [
+    [-W / 2, -D / 2],
+    [W / 2, -D / 2],
+    [-W / 2, D / 2],
+    [W / 2, D / 2],
+  ];
+  return (
+    <group>
+      {spots.map(([x, z], i) => (
+        <group key={i} position={[x, 0, z]}>
+          {/* Pylon base */}
+          <mesh position={[0, 0.25, 0]} castShadow>
+            <cylinderGeometry args={[0.35, 0.55, 0.5, 12]} />
+            <meshStandardMaterial color="#0a0f1e" metalness={0.8} roughness={0.3} />
+          </mesh>
+          {/* Pylon shaft */}
+          <mesh position={[0, 2.0, 0]} castShadow>
+            <cylinderGeometry args={[0.12, 0.18, 3.4, 10]} />
+            <meshStandardMaterial color="#10182b" metalness={0.85} roughness={0.28} />
+          </mesh>
+          {/* Beacon top */}
+          <mesh position={[0, 3.85, 0]}>
+            <sphereGeometry args={[0.28, 16, 16]} />
+            <meshStandardMaterial color="#4ECDC4" emissive="#4ECDC4" emissiveIntensity={2.4} toneMapped={false} />
+          </mesh>
+          {/* Beacon flare — additive plane */}
+          <mesh position={[0, 3.85, 0]} rotation={[0, 0, 0]}>
+            <sphereGeometry args={[0.55, 16, 16]} />
+            <meshBasicMaterial
+              ref={(m) => { beacons.current[i] = m; }}
+              color="#4ECDC4"
+              transparent
+              opacity={0.6}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+              toneMapped={false}
+            />
+          </mesh>
+          {/* Beacon pointlight — casts colored ambient */}
+          <pointLight color="#4ECDC4" intensity={1.4} distance={7} decay={1.6} position={[0, 3.8, 0]} />
+          {/* Vertical antenna streak */}
+          <mesh position={[0, 4.7, 0]}>
+            <cylinderGeometry args={[0.015, 0.03, 1.5, 6]} />
+            <meshStandardMaterial color="#4ECDC4" emissive="#4ECDC4" emissiveIntensity={1.6} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+// Volumetric fog band hugging the platform — reinforces depth when
+// viewed isometrically.
+function DeepFogBand() {
+  const ring = useRef<THREE.MeshBasicMaterial>(null);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (ring.current) ring.current.opacity = 0.14 + Math.sin(t * 0.5) * 0.03;
+  });
+  const R = (WORLD_BOUNDS.maxX - WORLD_BOUNDS.minX) / 2 + 18;
+  return (
+    <group>
+      {/* Wide flat disc — simulates ground fog */}
+      <mesh position={[0, -0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[R * 0.62, R * 1.05, 64]} />
+        <meshBasicMaterial
+          ref={ring}
+          color="#3ca9ff"
+          transparent
+          opacity={0.16}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+          toneMapped={false}
+        />
       </mesh>
     </group>
   );
