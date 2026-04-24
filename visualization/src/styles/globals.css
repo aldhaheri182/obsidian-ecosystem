@@ -1,0 +1,194 @@
+/* =============================================================
+ * Obsidian Ecosystem — Global Styles
+ * Authorized by: Cinematic UI spec Part I, Part 0.
+ * ============================================================= */
+
+/* Google Fonts — Inter, JetBrains Mono, Cinzel. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&family=Cinzel:wght@400;500;700&display=swap');
+
+:root {
+  /* Palette (duplicated from tokens/palette.ts for CSS consumers). */
+  --c-void-black: #0a0a0f;
+  --c-abyss-blue: #121624;
+  --c-verdigris: #4ecdc4;
+  --c-ember: #ff6b35;
+  --c-crimson-forge: #e63946;
+  --c-solar-gold: #ffd166;
+  --c-lunar-silver: #e0e0e0;
+  --c-ghost-white: #f8f9fa;
+  --c-deep-amethyst: #7209b7;
+  --c-cyan-aurora: #00f5d4;
+  --c-ash-grey: #6c757d;
+  --c-panel-border: #2a2a3e;
+
+  /* Typography. */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+  --font-ceremonial: 'Cinzel', 'Playfair Display', Georgia, serif;
+
+  /* Spacing grid — 4px base. */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 20px;
+  --s6: 24px;
+  --s8: 32px;
+  --s12: 48px;
+  --s16: 64px;
+
+  /* Z-stack. */
+  --z-void: 0;
+  --z-starfield: 10;
+  --z-planet: 20;
+  --z-timeline-ring: 30;
+  --z-atmosphere: 40;
+  --z-nexus-map: 100;
+  --z-hud: 1000;
+  --z-emergency: 2000;
+  --z-cursor: 3000;
+}
+
+/* Reset + baseline. */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--c-void-black);
+  color: var(--c-lunar-silver);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Custom cursor system — the default cursor is hidden. */
+  cursor: none;
+}
+
+/* Respect small viewports but don't apologize for being a desktop app. */
+@media (max-width: 900px) {
+  body::before {
+    content: 'This is not a mobile application. Minimum viewport: 1280×720.';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    padding: var(--s8);
+    text-align: center;
+    font-family: var(--font-ceremonial);
+    font-size: 20px;
+    letter-spacing: 0.15em;
+    color: var(--c-lunar-silver);
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--c-void-black);
+  }
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* The global void background — a subtle radial gradient, not flat black. */
+.void-background {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-void);
+  background: radial-gradient(
+    ellipse at 50% 35%,
+    #161A2E 0%,
+    #0E1120 60%,
+    #0A0A0F 100%
+  );
+  pointer-events: none;
+}
+
+/* Scrollbars, when they appear, are slim and themed. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-panel-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-ash-grey);
+}
+
+/* Utility: ceremonial-cased text. */
+.ceremonial {
+  font-family: var(--font-ceremonial);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Utility: monospace. */
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Utility: ash-grey secondary text. */
+.muted {
+  color: var(--c-ash-grey);
+}
+
+/* Panel base — used by tooltips, HUD cards, transcript. */
+.panel {
+  background: rgba(18, 22, 36, 0.95);
+  border: 1px solid var(--c-panel-border);
+  border-radius: 6px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* The cursor itself — actual element populated at runtime. */
+#obsidian-cursor {
+  position: fixed;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  z-index: var(--z-cursor);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 50% 50%,
+    rgba(78, 205, 196, 0.8) 0%,
+    rgba(78, 205, 196, 0) 70%);
+  transition: width 0.15s, height 0.15s, background 0.3s;
+  will-change: transform;
+}
+#obsidian-cursor.clickable {
+  width: 24px;
+  height: 24px;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(255, 209, 102, 0.9) 0%,
+    rgba(255, 209, 102, 0) 70%);
+}
+#obsidian-cursor.command-mode {
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0) 50%);
+}
+#obsidian-cursor.destructive {
+  width: 24px;
+  height: 24px;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(230, 57, 70, 0.9) 0%,
+    rgba(230, 57, 70, 0) 70%);
+}
