@@ -12,10 +12,21 @@
     "fmt": "prettier --write src"
   },
   "dependencies": {
+    "@dicebear/core": "^9.4.2",
+    "@dicebear/pixel-art": "^9.4.2",
+    "@pixi/particle-emitter": "^5.0.10",
+    "@types/d3-geo": "^3.1.0",
+    "d3-force-3d": "^3.0.6",
+    "d3-geo": "^3.1.1",
     "gsap": "^3.12.5",
+    "lottie-web": "^5.13.0",
     "nats.ws": "^1.29.0",
+    "pixi-filters": "^6.1.5",
     "pixi.js": "^8.0.0",
-    "three": "^0.168.0"
+    "postprocessing": "^6.39.1",
+    "simplex-noise": "^4.0.3",
+    "three": "^0.168.0",
+    "tone": "^15.1.22"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
