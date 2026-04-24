@@ -1449,55 +1449,132 @@ function AgoraMagic({ accent }: { accent: string }) {
       ))}
       <BeamRain accent={accent} />
       <AuraShockwave accent={accent} />
+      <AIActiveBadge accent={accent} />
     </group>
   );
 }
 
-// Jagged glowing line from each robot's antenna up to the table centre.
+// Big floating "AI ACTIVE" badge above the table — fixed pixel size
+// so it stays readable at any camera distance.
+function AIActiveBadge({ accent }: { accent: string }) {
+  return (
+    <Html
+      position={[0, 2.05, 0]}
+      center
+      occlude={false}
+      zIndexRange={[100, 0]}
+      style={{ pointerEvents: 'none' }}
+    >
+      <div
+        className="font-mono"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '8px 16px 8px 12px',
+          background: 'linear-gradient(140deg, rgba(6,10,18,0.92), rgba(2,4,10,0.92))',
+          border: `2px solid ${accent}`,
+          borderRadius: 999,
+          color: accent,
+          fontSize: 15,
+          letterSpacing: '0.34em',
+          fontWeight: 900,
+          whiteSpace: 'nowrap',
+          boxShadow: `0 0 26px ${accent}cc, inset 0 0 14px ${accent}33`,
+          textShadow: `0 0 10px ${accent}`,
+          animation: 'ai-active-float 2.4s ease-in-out infinite',
+        }}
+      >
+        <style>{`
+          @keyframes ai-active-float {
+            0%,100% { transform: translateY(0); opacity: 1; }
+            50%     { transform: translateY(-5px); opacity: 0.88; }
+          }
+          @keyframes ai-active-pulse {
+            0%,100% { transform: scale(1); box-shadow: 0 0 6px currentColor; }
+            50%     { transform: scale(1.55); box-shadow: 0 0 18px currentColor; }
+          }
+        `}</style>
+        <span
+          style={{
+            display: 'inline-block',
+            width: 11,
+            height: 11,
+            borderRadius: 999,
+            background: accent,
+            animation: 'ai-active-pulse 1.1s ease-in-out infinite',
+          }}
+        />
+        AI · ACTIVE
+      </div>
+    </Html>
+  );
+}
+
+// Three bright "cast orbs" stream from each robot's antenna to the
+// table, with fading glow halos. Much more visible than thin lines.
 function SpellArc({
   x, z, seed, accent,
 }: { x: number; z: number; seed: number; accent: string }) {
-  const geo = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(8 * 3), 3));
-    return g;
-  }, []);
-  const mat = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: new THREE.Color(accent),
-        transparent: true,
-        opacity: 0.75,
-        toneMapped: false,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-    [accent],
-  );
-  const lineObj = useMemo(() => new THREE.Line(geo, mat), [geo, mat]);
-
+  const ORBS = 3;
+  const orbRefs = useRef<Array<THREE.Mesh | null>>([]);
+  const haloRefs = useRef<Array<THREE.Mesh | null>>([]);
   useFrame(({ clock }) => {
-    const t = clock.elapsedTime + seed * 0.7;
-    const pos = geo.attributes.position as THREE.BufferAttribute;
-    const start = new THREE.Vector3(x * 0.9, 1.25, z * 0.9);
-    const end = new THREE.Vector3(0, 0.95, 0);
-    for (let i = 0; i < 8; i++) {
-      const u = i / 7;
-      const p = start.clone().lerp(end, u);
-      if (i > 0 && i < 7) {
-        const j = 0.09 + (1 - u) * 0.06;
-        p.x += Math.sin(t * 22 + i * 3.1) * j;
-        p.y += Math.sin(t * 18 + i * 2.7) * j * 0.6;
-        p.z += Math.cos(t * 25 + i * 3.5) * j;
+    const t = clock.elapsedTime + seed * 0.6;
+    orbRefs.current.forEach((m, i) => {
+      if (!m) return;
+      const period = 2.2;
+      const u = ((t / period + i / ORBS) % 1);
+      // Curved path — lerp with a hump in y
+      const sx = x * 0.85;
+      const sz = z * 0.85;
+      const sy = 1.3;
+      const ex = 0;
+      const ez = 0;
+      const ey = 0.95;
+      const px = sx + (ex - sx) * u;
+      const pz = sz + (ez - sz) * u;
+      // Arc up then down
+      const py = sy + (ey - sy) * u + Math.sin(u * Math.PI) * 0.35;
+      m.position.set(px, py, pz);
+      // Fade in then out
+      const mat = m.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.sin(u * Math.PI);
+      const halo = haloRefs.current[i];
+      if (halo) {
+        halo.position.set(px, py, pz);
+        const hm = halo.material as THREE.MeshBasicMaterial;
+        hm.opacity = Math.sin(u * Math.PI) * 0.55;
+        const s = 1 + (1 - u) * 0.4;
+        halo.scale.setScalar(s);
       }
-      pos.setXYZ(i, p.x, p.y, p.z);
-    }
-    pos.needsUpdate = true;
-    const base = 0.55 + Math.sin(t * 4) * 0.2;
-    mat.opacity = base + (Math.random() < 0.12 ? 0.35 : 0);
+    });
   });
-
-  return <primitive object={lineObj} />;
+  return (
+    <group>
+      {Array.from({ length: ORBS }).map((_, i) => (
+        <group key={i}>
+          {/* Halo — larger additive sphere */}
+          <mesh ref={(el) => { haloRefs.current[i] = el; }}>
+            <sphereGeometry args={[0.12, 14, 14]} />
+            <meshBasicMaterial
+              color={accent}
+              transparent
+              opacity={0}
+              toneMapped={false}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+          {/* Bright core orb */}
+          <mesh ref={(el) => { orbRefs.current[i] = el; }}>
+            <sphereGeometry args={[0.05, 12, 12]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
 }
 
 // Rotating rune circle on the floor beneath each cube-robot.
@@ -1639,25 +1716,46 @@ function BeamRain({ accent }: { accent: string }) {
   );
 }
 
-// A wide bright shockwave ring that fires outward from the table every
-// few seconds — like an "ai thought" broadcast reaching the whole room.
+// Three staggered bright shockwave rings that fire outward from the
+// table — reads as "AI broadcast" pulses radiating through the room.
 function AuraShockwave({ accent }: { accent: string }) {
-  const ring = useRef<THREE.Mesh>(null);
-  const mat = useRef<THREE.MeshBasicMaterial>(null);
+  const rings = useRef<Array<THREE.Mesh | null>>([]);
+  const mats = useRef<Array<THREE.MeshBasicMaterial | null>>([]);
   useFrame(({ clock }) => {
-    if (!ring.current || !mat.current) return;
     const t = clock.elapsedTime;
-    const period = 4.5;
-    const phase = (t % period) / period;
-    const s = 0.5 + phase * 5;
-    ring.current.scale.set(s, s, 1);
-    mat.current.opacity = (1 - phase) * 0.55;
+    rings.current.forEach((m, i) => {
+      if (!m) return;
+      const mat = mats.current[i];
+      if (!mat) return;
+      const period = 2.4;
+      const phase = (((t / period) + i * 0.33) % 1);
+      const s = 0.4 + phase * 5.8;
+      m.scale.set(s, s, 1);
+      mat.opacity = (1 - phase) * 0.85;
+    });
   });
   return (
-    <mesh ref={ring} position={[0, 0.034, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[0.75, 0.8, 72]} />
-      <meshBasicMaterial ref={mat} color={accent} transparent opacity={0} side={THREE.DoubleSide} toneMapped={false} />
-    </mesh>
+    <group>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <mesh
+          key={i}
+          ref={(el) => { rings.current[i] = el; }}
+          position={[0, 0.034, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <ringGeometry args={[0.75, 0.84, 72]} />
+          <meshBasicMaterial
+            ref={(m) => { mats.current[i] = m; }}
+            color={accent}
+            transparent
+            opacity={0}
+            side={THREE.DoubleSide}
+            toneMapped={false}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </group>
   );
 }
 

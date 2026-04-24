@@ -121,7 +121,7 @@ export const useOpenClawStore = create<OpenClawStore>((set) => ({
   toggleCameraMode: () =>
     set((s) => ({ cameraMode: s.cameraMode === 'explore' ? 'command' : 'explore' })),
 
-  zoom: 1,
+  zoom: 0.55,
   setZoom: (z) => set({ zoom: Math.max(0.18, Math.min(1, z)) }),
   nudgeZoom: (delta) =>
     set((s) => ({ zoom: Math.max(0.18, Math.min(1, s.zoom + delta)) })),
