@@ -2,11 +2,7 @@
 
 // Small bottom-left keybind helper.
 
-import { useOpenClawStore } from '@/store/openclawStore';
-
 export function KeyboardHelper() {
-  const cameraMode = useOpenClawStore((s) => s.cameraMode);
-
   return (
     <div
       className="fixed bottom-[92px] left-4 z-20 flex flex-col gap-1 p-3 rounded
@@ -17,8 +13,7 @@ export function KeyboardHelper() {
       <Row k="WASD" label="MOVE" />
       <Row k="SHIFT" label="RUN" />
       <Row k="E" label="INTERACT" />
-      <Row k="TAB" label={`TOGGLE · ${cameraMode === 'explore' ? 'COMMAND MAP' : 'EXPLORE'}`} />
-      <Row k="CLICK" label="ZOOM ROOM" />
+      <Row k="CLICK" label="SELECT AGENT" />
       <Row k="ESC" label="BACK" />
     </div>
   );

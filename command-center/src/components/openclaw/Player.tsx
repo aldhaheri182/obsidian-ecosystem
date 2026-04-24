@@ -53,8 +53,6 @@ export function Player() {
   const pushLog = useOpenClawStore((s) => s.pushLog);
   const discoverRoom = useOpenClawStore((s) => s.discoverRoom);
   const pushToast = useOpenClawStore((s) => s.pushToast);
-  const toggleCameraMode = useOpenClawStore((s) => s.toggleCameraMode);
-  const cameraMode = useOpenClawStore((s) => s.cameraMode);
   const selectAgent = useOpenClawStore((s) => s.selectAgent);
 
   const keys = useMemo(
@@ -89,10 +87,7 @@ export function Player() {
         if (openPanelRoomId) openPanel(null);
         selectAgent(null);
       }
-      if (k === 'tab') {
-        e.preventDefault();
-        toggleCameraMode();
-      }
+      // TAB disabled: command map is the only view
     };
     const onUp = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
@@ -109,7 +104,7 @@ export function Player() {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
     };
-  }, [keys, nearestRoomId, openPanelRoomId, openPanel, pushLog, selectAgent, toggleCameraMode]);
+  }, [keys, nearestRoomId, openPanelRoomId, openPanel, pushLog, selectAgent]);
 
   // Snap the 3D group to the store's playerPos when it diverges sharply
   // (teleport path). Small divergences caused by the useFrame-writes are
@@ -124,7 +119,6 @@ export function Player() {
     }
   }, [teleportTarget]);
 
-  const camOffset = useMemo(() => new THREE.Vector3(14, 16, 14), []);
   const camTarget = useMemo(() => new THREE.Vector3(), []);
   const desiredCamPos = useMemo(() => new THREE.Vector3(), []);
 
@@ -270,21 +264,13 @@ export function Player() {
       m.scale.set(s, s, 1);
     });
 
-    // Camera follow (lerp) with subtle breathing oscillation. Command mode
-    // pulls the camera back for a strategy-game overview; Explore mode
-    // tracks the avatar.
+    // Command-map camera — fixed pulled-back strategy-game overview
+    // with a subtle breathing oscillation.
     const breathe = Math.sin(tSec * 0.7) * 0.12;
-    if (cameraMode === 'command') {
-      desiredCamPos.set(0, 32 + breathe, 22 + breathe * 0.5);
-      camera.position.lerp(desiredCamPos, 0.05);
-      camTarget.set(0, 0, 0);
-      camera.lookAt(camTarget);
-    } else {
-      desiredCamPos.set(px + camOffset.x, camOffset.y + breathe, pz + camOffset.z);
-      camera.position.lerp(desiredCamPos, 0.1);
-      camTarget.set(px, 0.8, pz);
-      camera.lookAt(camTarget);
-    }
+    desiredCamPos.set(0, 32 + breathe, 22 + breathe * 0.5);
+    camera.position.lerp(desiredCamPos, 0.05);
+    camTarget.set(0, 0, 0);
+    camera.lookAt(camTarget);
   });
 
   return (
