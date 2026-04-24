@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { useOpenClawStore } from '@/store/openclawStore';
-import { ROOMS, WORLD_BOUNDS } from '@/data/openclawRooms';
+import { ROOMS, WORLD_BOUNDS, PLAYER_SPAWN } from '@/data/openclawRooms';
 
 // Dev-time: expose a smoke-test hook on window. No-op in production.
 if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
@@ -41,6 +41,10 @@ export function Player() {
   const openPanelRoomId = useOpenClawStore((s) => s.openPanelRoomId);
   const nearestRoomId = useOpenClawStore((s) => s.nearestRoomId);
   const pushLog = useOpenClawStore((s) => s.pushLog);
+  const discoverRoom = useOpenClawStore((s) => s.discoverRoom);
+  const pushToast = useOpenClawStore((s) => s.pushToast);
+  const toggleCameraMode = useOpenClawStore((s) => s.toggleCameraMode);
+  const cameraMode = useOpenClawStore((s) => s.cameraMode);
 
   const keys = useMemo(
     () => ({ w: false, a: false, s: false, d: false, shift: false, e: false }),
@@ -72,6 +76,10 @@ export function Player() {
       }
       if (k === 'escape' && openPanelRoomId) {
         openPanel(null);
+      }
+      if (k === 'tab') {
+        e.preventDefault();
+        toggleCameraMode();
       }
     };
     const onUp = (e: KeyboardEvent) => {
@@ -160,6 +168,27 @@ export function Player() {
     }
     if (bestId !== nearestRoomId) {
       setNearest(bestId);
+      // First time discovering — toast + discovery log
+      if (bestId) {
+        const state = useOpenClawStore.getState();
+        if (!state.discoveredRooms.has(bestId)) {
+          discoverRoom(bestId);
+          const room = ROOMS.find((r) => r.id === bestId);
+          if (room) {
+            pushToast({
+              kind: 'discover',
+              accent: room.accent,
+              title: `ROOM DISCOVERED — ${room.name}`,
+              subtitle: room.codename,
+            });
+            pushLog({
+              time: new Date().toISOString().slice(11, 19),
+              room: bestId,
+              message: `Entered proximity of ${room.name} — ${room.codename}.`,
+            });
+          }
+        }
+      }
     }
 
     // Walk anim
@@ -182,15 +211,23 @@ export function Player() {
           : 0.05;
     }
 
-    // Camera follow (lerp)
-    desiredCamPos.set(px + camOffset.x, camOffset.y, pz + camOffset.z);
-    camera.position.lerp(desiredCamPos, 0.08);
-    camTarget.set(px, 0.8, pz);
-    camera.lookAt(camTarget);
+    // Camera follow (lerp). Command mode pulls the camera back for a
+    // strategy-game overview; Explore mode tracks the avatar.
+    if (cameraMode === 'command') {
+      desiredCamPos.set(0, 32, 22);
+      camera.position.lerp(desiredCamPos, 0.06);
+      camTarget.set(0, 0, 0);
+      camera.lookAt(camTarget);
+    } else {
+      desiredCamPos.set(px + camOffset.x, camOffset.y, pz + camOffset.z);
+      camera.position.lerp(desiredCamPos, 0.08);
+      camTarget.set(px, 0.8, pz);
+      camera.lookAt(camTarget);
+    }
   });
 
   return (
-    <group ref={group} position={[0, 0, 0]}>
+    <group ref={group} position={PLAYER_SPAWN}>
       <group ref={body}>
         {/* Torso */}
         <mesh position={[0, 0.38, 0]} castShadow>

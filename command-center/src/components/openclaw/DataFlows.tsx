@@ -20,6 +20,11 @@ export function DataFlows() {
       curve: THREE.CatmullRomCurve3;
       color: string;
     }> = [];
+    // Overhead data nervous system — curves arc across the ceiling
+    // (y = 3.2) with a gentle lift at the midpoint, connecting rooms
+    // through the ceiling rather than along the floor.
+    const CEIL_Y = 3.2;
+    const LIFT = 0.6;
     for (const [aId, bId] of CONNECTIONS) {
       const a = byId.get(aId);
       const b = byId.get(bId);
@@ -28,15 +33,15 @@ export function DataFlows() {
       const az = a.center[1];
       const bx = b.center[0];
       const bz = b.center[1];
-      // Bend midpoint toward the centre for an L-shaped path
       const midX = (ax + bx) / 2;
       const midZ = (az + bz) / 2;
       const curve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(ax, 0.05, az),
-        new THREE.Vector3(midX, 0.05, az),
-        new THREE.Vector3(midX, 0.05, bz),
-        new THREE.Vector3(bx, 0.05, bz),
-      ], false, 'catmullrom', 0.2);
+        new THREE.Vector3(ax, CEIL_Y, az),
+        new THREE.Vector3((ax + midX) / 2, CEIL_Y + LIFT * 0.7, (az + midZ) / 2),
+        new THREE.Vector3(midX, CEIL_Y + LIFT, midZ),
+        new THREE.Vector3((bx + midX) / 2, CEIL_Y + LIFT * 0.7, (bz + midZ) / 2),
+        new THREE.Vector3(bx, CEIL_Y, bz),
+      ], false, 'catmullrom', 0.3);
       out.push({
         aId, bId,
         points: curve.getPoints(40),
@@ -86,7 +91,7 @@ function Orb({
     const period = 4000;
     const t = (now % period) / period;
     const p = curve.getPoint(t);
-    ref.current.position.set(p.x, 0.15, p.z);
+    ref.current.position.set(p.x, p.y, p.z);
     const mat = ref.current.material as THREE.MeshBasicMaterial;
     mat.opacity = Math.sin(t * Math.PI) * 0.9;
   });

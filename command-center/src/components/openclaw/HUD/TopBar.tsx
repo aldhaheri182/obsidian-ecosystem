@@ -9,6 +9,8 @@ export function TopBar() {
   const [utc, setUtc] = useState('');
   const openPanelRoomId = useOpenClawStore((s) => s.openPanelRoomId);
   const nearestRoomId = useOpenClawStore((s) => s.nearestRoomId);
+  const cameraMode = useOpenClawStore((s) => s.cameraMode);
+  const toggleCameraMode = useOpenClawStore((s) => s.toggleCameraMode);
 
   useEffect(() => {
     setUtc(new Date().toISOString().slice(11, 19));
@@ -37,7 +39,23 @@ export function TopBar() {
 
       <div className="flex items-center gap-6">
         <Stat label="AGENTS" value="12" color="#4ECDC4" />
-        <Stat label="MODE" value="REAL-TIME" color="#FFD166" />
+        {/* Camera mode chip — TAB toggles */}
+        <button
+          onClick={toggleCameraMode}
+          className="flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] tracking-[0.22em] font-mono transition"
+          style={{
+            borderColor: cameraMode === 'command' ? '#FFD166' : '#4ECDC4',
+            color: cameraMode === 'command' ? '#FFD166' : '#4ECDC4',
+            background:
+              cameraMode === 'command'
+                ? 'rgba(255,209,102,0.08)'
+                : 'rgba(78,205,196,0.08)',
+            pointerEvents: 'auto',
+          }}
+        >
+          {cameraMode === 'command' ? 'COMMAND MAP' : 'EXPLORE MODE'}
+          <span className="text-ash-grey">· TAB</span>
+        </button>
         <Stat label="ROOM" value={nearestRoom ? nearestRoom.name.toUpperCase() : '—'} color={nearestRoom?.accent ?? '#6C757D'} />
       </div>
 
