@@ -17,6 +17,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^11.1.7",
     "gsap": "^3.12.5",
+    "howler": "^2.2.4",
     "lucide-react": "^0.378.0",
     "nats.ws": "^1.30.3",
     "next": "14.2.3",
@@ -30,6 +31,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@types/howler": "^2.2.12",
     "@types/node": "^20.12.12",
     "@types/react": "^18.3.2",
     "@types/three": "^0.164.0",
