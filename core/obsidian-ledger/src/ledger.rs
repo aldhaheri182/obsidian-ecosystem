@@ -15,7 +15,7 @@ use futures::stream;
 use obsidian_bus::SigningKey;
 use obsidian_bus::VerifyingKey;
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, IteratorMode, Options, SingleThreaded};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::{debug, info};
@@ -68,6 +68,9 @@ pub trait Ledger: Send + Sync {
 
 /// RocksDB implementation.
 pub struct RocksLedger {
+    /// Owning agent id. Stored for debugging, per-agent filtering in
+    /// snapshot tooling, and provenance in future archival tags.
+    #[allow(dead_code)]
     agent_id: String,
     db: DBWithThreadMode<SingleThreaded>,
     signing_key: SigningKey,

@@ -3,6 +3,7 @@
 import { ThreeEvent, useFrame } from '@react-three/fiber';
 import { useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { Html } from '@react-three/drei';
 import { useEcosystemStore } from '@/store/ecosystemStore';
 import type { CityData } from '@/types';
 import { AgentCharacter, AgentOutfit } from './AgentCharacter';
@@ -37,6 +38,13 @@ const OUTFIT_BY_ARCHETYPE: Record<CityData['archetype'], AgentOutfit[]> = {
   bridge: ['silver', 'blue'],
 };
 
+const STATUS_COLOR: Record<string, string> = {
+  healthy: '#4ECDC4',
+  degraded: '#FF6B35',
+  critical: '#E63946',
+  dreaming: '#7209B7',
+};
+
 export function CityChamber({ city }: { city: CityData }) {
   const selectCity = useEcosystemStore((s) => s.selectCity);
   const selectedCityId = useEcosystemStore((s) => s.selectedCityId);
@@ -56,11 +64,23 @@ export function CityChamber({ city }: { city: CityData }) {
     [],
   );
 
-  // Emissive trim — intensity 2.0 per spec, boosted further on hover.
+  // Emissive trim — intensity 2.0 per spec, boosted further on hover,
+  // and pulsing in crimson when city risk > 60.
   const trimRef = useRef<THREE.MeshStandardMaterial>(null);
-  useFrame(() => {
+  const riskRingRef = useRef<THREE.MeshStandardMaterial>(null);
+  const atRisk = city.metrics.risk > 60;
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
     if (trimRef.current) {
-      trimRef.current.emissiveIntensity = hover ? 3.0 : 2.0;
+      const base = hover ? 3.0 : 2.0;
+      trimRef.current.emissiveIntensity = base + (selected ? 1.2 : 0);
+    }
+    if (riskRingRef.current) {
+      // Crimson risk-alert ring pulses on the floor when risk high.
+      const active = atRisk ? 1 : 0;
+      const pulse = 0.6 + Math.sin(t * 4) * 0.4;
+      riskRingRef.current.emissiveIntensity = active * 2.5 * pulse;
+      riskRingRef.current.opacity = active * (0.55 + 0.25 * pulse);
     }
   });
 
@@ -135,6 +155,92 @@ export function CityChamber({ city }: { city: CityData }) {
 
       {/* Accent point light inside the chamber (spec §9.1) */}
       <pointLight color={accent} intensity={0.5} distance={4} position={[0, 0.8, 0]} />
+
+      {/* Dream-state amethyst wash (city.status === 'dreaming') */}
+      {city.status === 'dreaming' && (
+        <pointLight color="#7209B7" intensity={1.4} distance={3.5} position={[0, 1.2, 0]} />
+      )}
+
+      {/* Crimson risk-alert ring on the floor — pulses when risk > 60 */}
+      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.9, 1.05, 48]} />
+        <meshStandardMaterial
+          ref={riskRingRef}
+          color="#E63946"
+          emissive="#E63946"
+          emissiveIntensity={0}
+          transparent
+          opacity={0}
+          side={THREE.DoubleSide}
+          toneMapped={false}
+        />
+      </mesh>
+
+      {/* Floating chamber label + status chip */}
+      <Html
+        position={[0, H + 0.45, 0]}
+        center
+        distanceFactor={8}
+        style={{ pointerEvents: 'none' }}
+        occlude={false}
+      >
+        <div
+          className="flex flex-col items-center font-ceremonial"
+          style={{
+            textShadow: `0 0 8px ${accent}`,
+            color: accent,
+            whiteSpace: 'nowrap',
+            filter: hover || selected ? 'brightness(1.3)' : 'brightness(1)',
+            transition: 'filter 0.15s',
+            transform: `scale(${selected ? 1.25 : 1})`,
+          }}
+        >
+          <div style={{ fontSize: 13, letterSpacing: '0.28em' }}>{city.name.toUpperCase()}</div>
+          <div
+            style={{
+              fontSize: 8,
+              color: STATUS_COLOR[city.status],
+              letterSpacing: '0.3em',
+              marginTop: 2,
+              padding: '2px 6px',
+              background: 'rgba(10,10,15,0.55)',
+              border: `1px solid ${STATUS_COLOR[city.status]}55`,
+              borderRadius: 99,
+              fontFamily: 'JetBrains Mono, monospace',
+            }}
+          >
+            {city.status.toUpperCase()}
+          </div>
+        </div>
+      </Html>
+
+      {/* Cursor-follow tooltip when hovered and NOT already selected */}
+      {hover && !selected && (
+        <Html
+          position={[0, H * 0.65, 0]}
+          center
+          distanceFactor={6}
+          style={{ pointerEvents: 'none' }}
+          occlude={false}
+        >
+          <div
+            className="font-mono"
+            style={{
+              padding: '6px 10px',
+              background: 'rgba(10,10,15,0.9)',
+              border: `1px solid ${accent}`,
+              borderRadius: 4,
+              color: accent,
+              fontSize: 9,
+              letterSpacing: '0.22em',
+              whiteSpace: 'nowrap',
+              boxShadow: `0 0 10px ${accent}55`,
+            }}
+          >
+            CLICK TO DESCEND
+          </div>
+        </Html>
+      )}
 
       {/* Floor plate (match platform but with a glow) */}
       <mesh position={[0, 0.015, 0]} receiveShadow>

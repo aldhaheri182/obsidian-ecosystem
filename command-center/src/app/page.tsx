@@ -6,9 +6,15 @@ import { RightSidebar } from '@/components/HUD/RightSidebar';
 import { BottomTimeline } from '@/components/HUD/BottomTimeline';
 import { CityDetailPanel } from '@/components/HUD/CityDetailPanel';
 import { LiveSimulation } from '@/components/LiveSimulation';
+import { HudLegend } from '@/components/HUD/HudLegend';
+import { LoadingVeil } from '@/components/LoadingVeil';
 
-// Scene runs WebGL; must be client-only / no SSR.
-const Scene = dynamic(() => import('@/components/Scene').then((m) => m.Scene), { ssr: false });
+// Scene runs WebGL; must be client-only / no SSR. Show a cinematic
+// loading veil while the chunks stream.
+const Scene = dynamic(() => import('@/components/Scene').then((m) => m.Scene), {
+  ssr: false,
+  loading: () => <LoadingVeil />,
+});
 
 export default function Page() {
   return (
@@ -18,6 +24,7 @@ export default function Page() {
       <RightSidebar />
       <BottomTimeline />
       <CityDetailPanel />
+      <HudLegend />
       <LiveSimulation />
     </main>
   );

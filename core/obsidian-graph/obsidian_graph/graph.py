@@ -98,16 +98,71 @@ class KnowledgeGraph:
                 return None
             return Principle(**dict(rec["n"]))
 
-    async def list_gold_nodes(self, limit: int = 100) -> List[Principle]:
-        """List all currently-GOLD-status Principles. This is the Great Library read."""
+    async def list_gold_nodes(
+        self,
+        limit: int = 100,
+        min_confidence: float = 0.0,
+        order_by: str = "published_at",
+    ) -> List[Principle]:
+        """List all currently-GOLD-status Principles. This is the Great Library read.
+
+        Args:
+            limit: hard cap.
+            min_confidence: drop anything below this.
+            order_by: ``published_at`` (recency, default), ``confidence``
+                     (peer-review weight), or ``deflated_sharpe`` (quant merit).
+        """
+        if order_by not in {"published_at", "confidence", "deflated_sharpe"}:
+            raise ValueError(f"invalid order_by: {order_by}")
+        async with self._driver.session() as session:
+            r = await session.run(
+                f"""
+                MATCH (n:Principle {{status: 'GOLD'}})
+                WHERE coalesce(n.confidence, 0.0) >= $min_conf
+                RETURN n
+                ORDER BY n.{order_by} DESC
+                LIMIT $limit
+                """,
+                limit=limit,
+                min_conf=min_confidence,
+            )
+            out: List[Principle] = []
+            async for rec in r:
+                out.append(Principle(**dict(rec["n"])))
+            return out
+
+    async def deprecate_principle(self, principle_id: str, reason: str) -> None:
+        """Mark a Principle as DEPRECATED with a reason. Used by the Entropy
+        Engine (L46) when alpha is projected to decay to zero, by the Causal
+        Auditor when a Principle is refuted, or by the Reaper when the owning
+        agent is retired.
+        """
+        async with self._driver.session() as session:
+            await session.run(
+                """
+                MATCH (n:Principle {principle_id: $id})
+                SET n.status = 'DEPRECATED',
+                    n.deprecated_at = datetime(),
+                    n.deprecation_reason = $reason
+                """,
+                id=principle_id,
+                reason=reason,
+            )
+
+    async def search_principles_by_keyword(self, keyword: str, limit: int = 20) -> List[Principle]:
+        """Case-insensitive keyword search over Principle titles + abstracts + keywords."""
         async with self._driver.session() as session:
             r = await session.run(
                 """
-                MATCH (n:Principle {status: 'GOLD'})
+                MATCH (n:Principle)
+                WHERE toLower(n.title) CONTAINS toLower($kw)
+                   OR toLower(n.abstract) CONTAINS toLower($kw)
+                   OR any(k IN coalesce(n.keywords, []) WHERE toLower(k) = toLower($kw))
                 RETURN n
-                ORDER BY n.published_at DESC
+                ORDER BY n.status, n.published_at DESC
                 LIMIT $limit
                 """,
+                kw=keyword,
                 limit=limit,
             )
             out: List[Principle] = []

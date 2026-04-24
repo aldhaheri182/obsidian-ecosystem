@@ -45,22 +45,41 @@ export function ConnectionLines() {
       }>;
   }, [cities, cityMap]);
 
-  // Animated orbs per advancement event. For now, we spawn a periodic one.
+  // Animated orbs — one per new live-simulation timeline event,
+  // tied to the emitting city. Pick a random connected peer as target.
   const [orbs, setOrbs] = useState<Array<{ id: number; pairIdx: number; startedAt: number; color: string }>>([]);
   const nextId = useRef(1);
+  const timeline = useEcosystemStore((s) => s.timeline);
+  const lastSeenLen = useRef(0);
 
   useEffect(() => {
-    const iv = setInterval(() => {
-      const idx = Math.floor(Math.random() * curves.length);
-      const curve = curves[idx];
-      if (!curve) return;
-      setOrbs((prev) => [
-        ...prev,
-        { id: nextId.current++, pairIdx: idx, startedAt: performance.now(), color: curve.a.accentColor },
-      ]);
-    }, 2200);
-    return () => clearInterval(iv);
-  }, [curves]);
+    if (timeline.length <= lastSeenLen.current) {
+      lastSeenLen.current = timeline.length;
+      return;
+    }
+    const newOnes = timeline.slice(0, timeline.length - lastSeenLen.current);
+    lastSeenLen.current = timeline.length;
+    if (curves.length === 0) return;
+
+    const spawned: typeof orbs = [];
+    for (const ev of newOnes) {
+      // Find a curve anchored at the event's city.
+      const candidates = curves
+        .map((c, i) => ({ c, i }))
+        .filter(({ c }) => c.aId === ev.cityId || c.bId === ev.cityId);
+      if (candidates.length === 0) continue;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      spawned.push({
+        id: nextId.current++,
+        pairIdx: pick.i,
+        startedAt: performance.now(),
+        color: ev.cityColor,
+      });
+    }
+    if (spawned.length > 0) {
+      setOrbs((prev) => [...prev, ...spawned]);
+    }
+  }, [timeline, curves]);
 
   // Clean up orbs
   useFrame(() => {
