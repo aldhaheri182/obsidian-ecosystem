@@ -111,7 +111,7 @@ export const useOpenClawStore = create<OpenClawStore>((set) => ({
   targetRoomId: null,
   setTargetRoom: (id) => set({ targetRoomId: id }),
 
-  cameraMode: 'explore',
+  cameraMode: 'command',
   setCameraMode: (m) => set({ cameraMode: m }),
   toggleCameraMode: () =>
     set((s) => ({ cameraMode: s.cameraMode === 'explore' ? 'command' : 'explore' })),

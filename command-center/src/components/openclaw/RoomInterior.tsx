@@ -6,13 +6,14 @@ import { useRef, useMemo } from 'react';
 import { Html } from '@react-three/drei';
 import type { RoomDef } from '@/data/openclawRooms';
 import { Terminal } from './Terminal';
+import { AgoraRoom } from './AgoraRoom';
 
 // Per-archetype interior. Every room has a central Terminal (interactable)
 // plus archetype-specific props. Props stay inside room bounds [w, d].
 // Each interior uses room.promptLabel for the "Press E — ..." prompt.
 export function RoomInterior({ room }: { room: RoomDef }) {
   switch (room.archetype) {
-    case 'strategy':   return <Strategy room={room} />;
+    case 'strategy':   return <AgoraRoom room={room} />;
     case 'time':       return <TimeEngine room={room} />;
     case 'volatility': return <Volatility room={room} />;
     case 'risk':       return <RiskGate room={room} />;

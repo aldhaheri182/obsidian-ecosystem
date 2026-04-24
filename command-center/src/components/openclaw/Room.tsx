@@ -128,8 +128,9 @@ export function Room({ room }: { room: RoomDef }) {
       {/* Interior diorama */}
       <RoomInterior room={room} />
 
-      {/* NPC agents */}
-      {Array.from({ length: room.agentCount }).map((_, i) => {
+      {/* NPC agents — AGORA renders its own council members inside
+          AgoraRoom, so we skip the default patrol spawn for it. */}
+      {room.archetype !== 'strategy' && Array.from({ length: room.agentCount }).map((_, i) => {
         const callsigns = ['oracle', 'scout', 'keeper', 'analyst', 'forge', 'warden', 'herald', 'sentry'];
         const callsign = `${room.id}-${callsigns[i % callsigns.length]}-${String(i + 1).padStart(2, '0')}`;
         const role = room.promptLabel;
