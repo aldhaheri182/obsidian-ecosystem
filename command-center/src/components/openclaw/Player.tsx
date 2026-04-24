@@ -55,6 +55,7 @@ export function Player() {
   const pushToast = useOpenClawStore((s) => s.pushToast);
   const toggleCameraMode = useOpenClawStore((s) => s.toggleCameraMode);
   const cameraMode = useOpenClawStore((s) => s.cameraMode);
+  const selectAgent = useOpenClawStore((s) => s.selectAgent);
 
   const keys = useMemo(
     () => ({ w: false, a: false, s: false, d: false, shift: false, e: false }),
@@ -84,8 +85,9 @@ export function Player() {
         }
         keys.e = true;
       }
-      if (k === 'escape' && openPanelRoomId) {
-        openPanel(null);
+      if (k === 'escape') {
+        if (openPanelRoomId) openPanel(null);
+        selectAgent(null);
       }
       if (k === 'tab') {
         e.preventDefault();
@@ -107,7 +109,7 @@ export function Player() {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
     };
-  }, [keys, nearestRoomId, openPanelRoomId, openPanel, pushLog]);
+  }, [keys, nearestRoomId, openPanelRoomId, openPanel, pushLog, selectAgent, toggleCameraMode]);
 
   // Snap the 3D group to the store's playerPos when it diverges sharply
   // (teleport path). Small divergences caused by the useFrame-writes are

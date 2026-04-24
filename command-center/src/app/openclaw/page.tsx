@@ -8,6 +8,7 @@ import { Minimap } from '@/components/openclaw/HUD/Minimap';
 import { InteractionPanel } from '@/components/openclaw/HUD/InteractionPanel';
 import { ToastStack } from '@/components/openclaw/HUD/ToastStack';
 import { KeyboardHelper } from '@/components/openclaw/HUD/KeyboardHelper';
+import { AgentPanel } from '@/components/openclaw/HUD/AgentPanel';
 import { LoadingVeil } from '@/components/LoadingVeil';
 
 const OpenClawScene = dynamic(
@@ -24,6 +25,7 @@ export default function OpenClawPage() {
       <Minimap />
       <BottomLog />
       <InteractionPanel />
+      <AgentPanel />
       <ToastStack />
       <KeyboardHelper />
     </main>

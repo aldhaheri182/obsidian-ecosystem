@@ -30,6 +30,15 @@ export interface Toast {
 
 export type CameraMode = 'command' | 'explore';
 
+export interface SelectedAgent {
+  roomId: string;
+  roomName: string;
+  accent: string;
+  index: number;
+  callsign: string;
+  role: string;
+}
+
 interface OpenClawStore {
   // player
   playerPos: [number, number, number];
@@ -57,6 +66,10 @@ interface OpenClawStore {
   toasts: Toast[];
   pushToast: (t: Omit<Toast, 'id' | 'startedAt'>) => void;
   dismissToast: (id: string) => void;
+
+  // selected agent (from clicking an NPC in the world)
+  selectedAgent: SelectedAgent | null;
+  selectAgent: (a: SelectedAgent | null) => void;
 
   // log + missions
   log: LogEntry[];
@@ -121,6 +134,9 @@ export const useOpenClawStore = create<OpenClawStore>((set) => ({
       ],
     })),
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+
+  selectedAgent: null,
+  selectAgent: (a) => set({ selectedAgent: a }),
 
   log: [
     { time: '00:00:00', room: 'system', message: 'Agent civilisation — boot OK. Walk with WASD. Press E to interact. TAB to toggle camera mode.' },

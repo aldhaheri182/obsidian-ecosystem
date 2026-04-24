@@ -1,41 +1,63 @@
 'use client';
 
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useFrame, type ThreeEvent } from '@react-three/fiber';
+import { useMemo, useRef, useState } from 'react';
+import { Html } from '@react-three/drei';
+import { useOpenClawStore } from '@/store/openclawStore';
 
-// Tiny agent character that walks a waypoint loop inside its room.
-// Capsule body + sphere head + brighter accented visor, badge halo,
-// pulsing ground disc under feet and a fading micro walk-trail for
-// a more alive, game-like presence.
+// Tiny Pokémon-lab style NPC — chunky low-poly character with hair,
+// jacket, legs, and a ground shadow. The whole character is clickable:
+// pressing it opens the Agent Panel (store.selectedAgent).
 export function NPCAgent({
   accent,
   waypoints,
   seed = 0,
+  roomId,
+  roomName,
+  index = 0,
+  callsign,
+  role,
 }: {
   accent: string;
   waypoints: Array<[number, number, number]>;
   seed?: number;
+  roomId: string;
+  roomName: string;
+  index?: number;
+  callsign: string;
+  role: string;
 }) {
   const root = useRef<THREE.Group>(null);
   const body = useRef<THREE.Group>(null);
   const legL = useRef<THREE.Group>(null);
   const legR = useRef<THREE.Group>(null);
-  const visorMat = useRef<THREE.MeshStandardMaterial>(null);
+  const armL = useRef<THREE.Group>(null);
+  const armR = useRef<THREE.Group>(null);
   const haloMat = useRef<THREE.MeshBasicMaterial>(null);
-  const discMat = useRef<THREE.MeshBasicMaterial>(null);
+
+  const [hover, setHover] = useState(false);
+  const selectAgent = useOpenClawStore((s) => s.selectAgent);
+  const selectedAgent = useOpenClawStore((s) => s.selectedAgent);
+  const isSelected =
+    selectedAgent?.roomId === roomId && selectedAgent?.index === index;
 
   const state = useMemo(
     () => ({ wp: 0, phase: ((seed * 127) % 628) / 100 }),
     [seed],
   );
 
-  // Micro walk-trail — 4 small fading dots
-  const trailRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const trailPositions = useRef<Array<[number, number]>>(
-    Array.from({ length: 4 }, () => [0, 0]),
-  );
-  const trailTick = useRef(0);
+  // Deterministic pseudo-random look per agent — hair colour, jacket
+  // colour, so the group of agents feels varied.
+  const look = useMemo(() => {
+    const hairs = ['#3d2713', '#7a4a1e', '#1a1a1a', '#c0a060', '#8b3a2f'];
+    const shirts = ['#e7eaf2', '#cfe5ff', '#ffd7a8', '#ffd9e4', '#d0f0cf'];
+    const pants = ['#22344a', '#1f2730', '#3d2d1c', '#454545'];
+    const h = Math.abs(seed * 93) % hairs.length;
+    const s = Math.abs(seed * 41 + 7) % shirts.length;
+    const p = Math.abs(seed * 17 + 3) % pants.length;
+    return { hair: hairs[h], shirt: shirts[s], pants: pants[p] };
+  }, [seed]);
 
   useFrame(({ clock }, dt) => {
     if (!root.current || waypoints.length === 0) return;
@@ -48,121 +70,184 @@ export function NPCAgent({
       state.wp = (state.wp + 1) % waypoints.length;
     } else {
       walking = true;
-      const spd = 0.6;
+      const spd = 0.55;
       root.current.position.x += (dx / d) * spd * dt;
       root.current.position.z += (dz / d) * spd * dt;
       root.current.rotation.y = Math.atan2(dx, dz);
     }
     const t = clock.elapsedTime * 4 + state.phase;
     if (body.current) {
-      body.current.position.y = 0.22 + Math.abs(Math.sin(t)) * 0.03;
+      body.current.position.y = 0.0 + Math.abs(Math.sin(t)) * 0.035;
     }
     if (legL.current && legR.current) {
-      const sw = walking ? Math.sin(t) * 0.4 : 0;
+      const sw = walking ? Math.sin(t) * 0.45 : 0;
       legL.current.rotation.x = sw;
       legR.current.rotation.x = -sw;
     }
-    if (visorMat.current) {
-      visorMat.current.emissiveIntensity = 2.2 + Math.sin(clock.elapsedTime * 2.3 + state.phase) * 0.35;
+    if (armL.current && armR.current) {
+      const sw = walking ? Math.sin(t) * 0.35 : 0;
+      armL.current.rotation.x = -sw * 0.7;
+      armR.current.rotation.x = sw * 0.7;
     }
     if (haloMat.current) {
-      haloMat.current.opacity = 0.4 + Math.sin(clock.elapsedTime * 2.0) * 0.12;
+      const tc = clock.elapsedTime * 2;
+      haloMat.current.opacity =
+        (isSelected ? 0.9 : hover ? 0.7 : 0.0) + Math.sin(tc) * 0.05;
     }
-    if (discMat.current) {
-      discMat.current.opacity = (walking ? 0.55 : 0.35) + Math.sin(clock.elapsedTime * 3.0) * 0.08;
-    }
-
-    // Update trail every ~0.15s
-    trailTick.current += dt;
-    if (walking && trailTick.current > 0.15) {
-      trailTick.current = 0;
-      const positions = trailPositions.current;
-      for (let i = positions.length - 1; i > 0; i--) {
-        positions[i] = positions[i - 1];
-      }
-      positions[0] = [root.current.position.x, root.current.position.z];
-    }
-    trailRefs.current.forEach((m, i) => {
-      if (!m || !root.current) return;
-      const [tx, tz] = trailPositions.current[i];
-      m.position.set(tx - root.current.position.x, 0.015, tz - root.current.position.z);
-      const mat = m.material as THREE.MeshBasicMaterial;
-      const fade = 1 - i / trailRefs.current.length;
-      mat.opacity = walking ? fade * 0.35 : mat.opacity * 0.9;
-    });
   });
 
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    selectAgent({
+      roomId,
+      roomName,
+      accent,
+      index,
+      callsign,
+      role,
+    });
+  };
+
   return (
-    <group ref={root}>
-      {/* Ground disc under feet — marker of presence */}
-      <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+    <group
+      ref={root}
+      onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = 'pointer'; }}
+      onPointerOut={(e) => { e.stopPropagation(); setHover(false); document.body.style.cursor = ''; }}
+      onClick={handleClick}
+    >
+      {/* Soft ground shadow — dark, opaque-ish disc under feet */}
+      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.22, 20]} />
-        <meshBasicMaterial ref={discMat} color={accent} transparent opacity={0.45} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.25} depthWrite={false} />
       </mesh>
-      {/* Halo ring — gently pulses */}
-      <mesh position={[0, 0.014, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.26, 0.32, 32]} />
-        <meshBasicMaterial ref={haloMat} color={accent} transparent opacity={0.4} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
+      {/* Accent halo — visible on hover/select */}
+      <mesh position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.26, 0.34, 36]} />
+        <meshBasicMaterial ref={haloMat} color={accent} transparent opacity={0} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
       </mesh>
-      <group ref={body}>
-        {/* Body */}
-        <mesh position={[0, 0.22, 0]} castShadow>
-          <capsuleGeometry args={[0.095, 0.3, 4, 10]} />
-          <meshStandardMaterial color="#1a1e2e" roughness={0.7} />
+
+      <group ref={body} position={[0, 0.0, 0]}>
+        {/* Chunky hips/pants */}
+        <mesh position={[0, 0.24, 0]} castShadow>
+          <boxGeometry args={[0.22, 0.18, 0.16]} />
+          <meshStandardMaterial color={look.pants} roughness={0.8} />
         </mesh>
-        {/* Shoulder accent stripe */}
-        <mesh position={[0, 0.3, 0]}>
-          <boxGeometry args={[0.19, 0.028, 0.03]} />
-          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={1.0} toneMapped={false} />
+        {/* Torso / jacket */}
+        <mesh position={[0, 0.44, 0]} castShadow>
+          <boxGeometry args={[0.26, 0.24, 0.18]} />
+          <meshStandardMaterial color={look.shirt} roughness={0.75} metalness={0.05} />
+        </mesh>
+        {/* Collar / neck accent */}
+        <mesh position={[0, 0.57, 0.05]}>
+          <boxGeometry args={[0.14, 0.04, 0.08]} />
+          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.35} toneMapped={false} />
+        </mesh>
+        {/* Accent shoulder stripe */}
+        <mesh position={[0, 0.525, 0]}>
+          <boxGeometry args={[0.27, 0.04, 0.19]} />
+          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} toneMapped={false} />
         </mesh>
         {/* Head */}
-        <mesh position={[0, 0.47, 0]}>
-          <sphereGeometry args={[0.085, 14, 14]} />
-          <meshStandardMaterial color="#e0c7a8" roughness={0.8} />
+        <mesh position={[0, 0.7, 0]} castShadow>
+          <boxGeometry args={[0.22, 0.22, 0.22]} />
+          <meshStandardMaterial color="#f1d9b5" roughness={0.85} />
         </mesh>
-        {/* Visor — brighter, slightly larger */}
-        <mesh position={[0, 0.48, 0.085]}>
-          <boxGeometry args={[0.13, 0.028, 0.008]} />
-          <meshStandardMaterial ref={visorMat} color={accent} emissive={accent} emissiveIntensity={2.4} toneMapped={false} />
+        {/* Hair — slab on top of head, slight tilt */}
+        <mesh position={[0, 0.83, -0.02]} castShadow>
+          <boxGeometry args={[0.24, 0.08, 0.23]} />
+          <meshStandardMaterial color={look.hair} roughness={0.9} />
         </mesh>
-        {/* Badge halo — small glowing disc on chest */}
-        <mesh position={[0.065, 0.24, 0.09]}>
-          <sphereGeometry args={[0.022, 10, 10]} />
-          <meshBasicMaterial color={accent} toneMapped={false} />
+        {/* Hair front tuft */}
+        <mesh position={[0.06, 0.79, 0.09]}>
+          <boxGeometry args={[0.1, 0.08, 0.06]} />
+          <meshStandardMaterial color={look.hair} roughness={0.9} />
         </mesh>
-        {/* Back antenna tip */}
-        <mesh position={[0, 0.56, -0.02]}>
-          <cylinderGeometry args={[0.005, 0.01, 0.12, 6]} />
-          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={1.3} toneMapped={false} />
+        {/* Eyes — two black pixels */}
+        <mesh position={[-0.05, 0.72, 0.113]}>
+          <boxGeometry args={[0.03, 0.04, 0.005]} />
+          <meshBasicMaterial color="#0a0a10" toneMapped={false} />
         </mesh>
-        {/* Legs — now animated */}
-        <group ref={legL} position={[-0.04, 0.1, 0]}>
-          <mesh position={[0, -0.06, 0]} castShadow>
-            <capsuleGeometry args={[0.03, 0.12, 4, 8]} />
-            <meshStandardMaterial color="#0e121f" />
+        <mesh position={[0.05, 0.72, 0.113]}>
+          <boxGeometry args={[0.03, 0.04, 0.005]} />
+          <meshBasicMaterial color="#0a0a10" toneMapped={false} />
+        </mesh>
+        {/* Arms */}
+        <group ref={armL} position={[-0.15, 0.54, 0]}>
+          <mesh position={[0, -0.13, 0]} castShadow>
+            <boxGeometry args={[0.07, 0.26, 0.1]} />
+            <meshStandardMaterial color={look.shirt} roughness={0.75} />
+          </mesh>
+          {/* Hand */}
+          <mesh position={[0, -0.28, 0]}>
+            <boxGeometry args={[0.075, 0.06, 0.1]} />
+            <meshStandardMaterial color="#f1d9b5" roughness={0.85} />
           </mesh>
         </group>
-        <group ref={legR} position={[0.04, 0.1, 0]}>
-          <mesh position={[0, -0.06, 0]} castShadow>
-            <capsuleGeometry args={[0.03, 0.12, 4, 8]} />
-            <meshStandardMaterial color="#0e121f" />
+        <group ref={armR} position={[0.15, 0.54, 0]}>
+          <mesh position={[0, -0.13, 0]} castShadow>
+            <boxGeometry args={[0.07, 0.26, 0.1]} />
+            <meshStandardMaterial color={look.shirt} roughness={0.75} />
+          </mesh>
+          <mesh position={[0, -0.28, 0]}>
+            <boxGeometry args={[0.075, 0.06, 0.1]} />
+            <meshStandardMaterial color="#f1d9b5" roughness={0.85} />
+          </mesh>
+        </group>
+        {/* Legs */}
+        <group ref={legL} position={[-0.06, 0.16, 0]}>
+          <mesh position={[0, -0.1, 0]} castShadow>
+            <boxGeometry args={[0.08, 0.2, 0.1]} />
+            <meshStandardMaterial color={look.pants} roughness={0.85} />
+          </mesh>
+          {/* Shoe */}
+          <mesh position={[0, -0.23, 0.01]}>
+            <boxGeometry args={[0.09, 0.06, 0.14]} />
+            <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
+          </mesh>
+        </group>
+        <group ref={legR} position={[0.06, 0.16, 0]}>
+          <mesh position={[0, -0.1, 0]} castShadow>
+            <boxGeometry args={[0.08, 0.2, 0.1]} />
+            <meshStandardMaterial color={look.pants} roughness={0.85} />
+          </mesh>
+          <mesh position={[0, -0.23, 0.01]}>
+            <boxGeometry args={[0.09, 0.06, 0.14]} />
+            <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
           </mesh>
         </group>
       </group>
-      {/* Walk-trail motes (world-space, corrected to local in useFrame) */}
-      {Array.from({ length: 4 }).map((_, i) => (
-        <mesh
-          // eslint-disable-next-line react/no-array-index-key
-          key={i}
-          ref={(el) => {
-            trailRefs.current[i] = el;
-          }}
-          rotation={[-Math.PI / 2, 0, 0]}
+
+      {/* Hover/selected floating nameplate */}
+      {(hover || isSelected) && (
+        <Html
+          position={[0, 1.25, 0]}
+          center
+          distanceFactor={7}
+          occlude={false}
+          style={{ pointerEvents: 'none' }}
         >
-          <circleGeometry args={[0.06, 14]} />
-          <meshBasicMaterial color={accent} transparent opacity={0} depthWrite={false} toneMapped={false} />
-        </mesh>
-      ))}
+          <div
+            style={{
+              background: 'linear-gradient(140deg, rgba(14,20,36,0.96), rgba(6,10,20,0.96))',
+              border: `1.5px solid ${accent}`,
+              borderRadius: 6,
+              padding: '6px 10px',
+              fontFamily: 'JetBrains Mono, monospace',
+              color: accent,
+              fontSize: 11,
+              letterSpacing: '0.18em',
+              whiteSpace: 'nowrap',
+              boxShadow: `0 0 14px ${accent}66`,
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>{callsign.toUpperCase()}</div>
+            <div style={{ opacity: 0.65, fontSize: 9, marginTop: 2, letterSpacing: '0.25em' }}>
+              CLICK TO OPEN
+            </div>
+          </div>
+        </Html>
+      )}
     </group>
   );
 }

@@ -199,25 +199,11 @@ function DeepFogBand() {
 function Slab() {
   return (
     <group>
-      {/* Floor slab slightly above the platform */}
+      {/* Warm interior slab — tiled visual comes from rooms/corridors. */}
       <mesh receiveShadow position={[0, 0.01, 0]}>
         <boxGeometry args={[BUILDING_W, 0.02, BUILDING_D]} />
-        <meshStandardMaterial color="#0c1120" roughness={0.9} metalness={0.2} />
+        <meshStandardMaterial color="#d6ccb4" roughness={0.9} metalness={0.05} />
       </mesh>
-      {/* Faint cyan grid over the whole floor */}
-      <Grid
-        position={[0, 0.03, 0]}
-        args={[BUILDING_W - 0.2, BUILDING_D - 0.2]}
-        cellSize={0.5}
-        cellThickness={0.25}
-        cellColor="#1b2c44"
-        sectionSize={7}
-        sectionThickness={0.8}
-        sectionColor="#3ca9ff"
-        fadeDistance={40}
-        fadeStrength={1.4}
-        infiniteGrid={false}
-      />
     </group>
   );
 }
@@ -238,15 +224,15 @@ function Corridors() {
     <group>
       {CORRIDORS.map((c, idx) => (
         <group key={idx} position={[0, 0.04, c.centerZ]}>
-          {/* Corridor floor tint */}
+          {/* Corridor floor tint — warm light runway */}
           <mesh>
             <boxGeometry args={[BUILDING_W - 0.4, 0.012, c.depth]} />
-            <meshStandardMaterial color="#0b1428" emissive="#4ECDC4" emissiveIntensity={0.18} />
+            <meshStandardMaterial color="#c4b999" roughness={0.75} metalness={0.05} />
           </mesh>
           {/* Centre guide stripe */}
           <mesh position={[0, 0.007, 0]}>
-            <boxGeometry args={[BUILDING_W - 1.0, 0.003, 0.04]} />
-            <meshStandardMaterial color="#4ECDC4" emissive="#4ECDC4" emissiveIntensity={1.4} toneMapped={false} />
+            <boxGeometry args={[BUILDING_W - 1.0, 0.003, 0.05]} />
+            <meshStandardMaterial color="#4ECDC4" emissive="#4ECDC4" emissiveIntensity={1.2} toneMapped={false} />
           </mesh>
           {/* Pulsing floor dots along both edges */}
           {Array.from({ length: 12 }).map((_, i) => {
@@ -285,9 +271,9 @@ function OuterShell() {
   const outerMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: '#121827',
-        roughness: 0.55,
-        metalness: 0.7,
+        color: '#ece4d0',
+        roughness: 0.82,
+        metalness: 0.08,
       }),
     [],
   );
@@ -336,8 +322,8 @@ function OuterShell() {
 // lines not covering corridors). Half-height so the isometric camera
 // still sees room interiors clearly.
 function InternalPartitions() {
-  const PART_H = 1.4;
-  const T = 0.06;
+  const PART_H = 1.6;
+  const T = 0.12;
 
   const partitions = useMemo(() => {
     const items: Array<{ pos: [number, number, number]; size: [number, number, number]; accent?: string; locked?: boolean }> = [];
@@ -403,24 +389,21 @@ function InternalPartitions() {
     <group>
       {partitions.map((p, i) => (
         <group key={i} position={p.pos}>
-          <mesh>
+          {/* Solid interior wall — warm off-white, so rooms read as
+              distinct enclosed spaces in the Pokemon-lab style. */}
+          <mesh castShadow receiveShadow>
             <boxGeometry args={p.size} />
-            <meshPhysicalMaterial
-              color="#8fcfff"
-              roughness={0.15}
-              metalness={0}
-              transmission={0.9}
-              ior={1.4}
-              transparent
-              opacity={0.18}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-            />
+            <meshStandardMaterial color="#f3efe4" roughness={0.75} metalness={0.05} />
           </mesh>
-          {/* Neon top edge */}
+          {/* Warm baseboard at floor */}
+          <mesh position={[0, -p.size[1] / 2 + 0.08, 0]}>
+            <boxGeometry args={[p.size[0] + 0.01, 0.16, p.size[2] + 0.01]} />
+            <meshStandardMaterial color="#d8cfba" roughness={0.8} metalness={0.02} />
+          </mesh>
+          {/* Neon top edge — brand accent */}
           <mesh position={[0, p.size[1] / 2 + 0.02, 0]}>
-            <boxGeometry args={[p.size[0], 0.03, p.size[2]]} />
-            <meshStandardMaterial color="#4ECDC4" emissive="#4ECDC4" emissiveIntensity={1.5} toneMapped={false} />
+            <boxGeometry args={[p.size[0], 0.04, p.size[2]]} />
+            <meshStandardMaterial color="#4ECDC4" emissive="#4ECDC4" emissiveIntensity={1.2} toneMapped={false} />
           </mesh>
         </group>
       ))}

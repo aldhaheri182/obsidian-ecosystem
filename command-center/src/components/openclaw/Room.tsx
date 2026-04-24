@@ -40,19 +40,41 @@ export function Room({ room }: { room: RoomDef }) {
     ];
   }, [w, d]);
 
+  // Build a grid of tiles (checkerboard feel) so the floor reads like a
+  // Pokemon-lab interior rather than a dark slab.
+  const tiles = useMemo(() => {
+    const arr: Array<{ x: number; z: number; dark: boolean }> = [];
+    const tileSize = 0.6;
+    const cols = Math.floor((w - 0.5) / tileSize);
+    const rows = Math.floor((d - 0.5) / tileSize);
+    const x0 = -((cols - 1) * tileSize) / 2;
+    const z0 = -((rows - 1) * tileSize) / 2;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        arr.push({ x: x0 + c * tileSize, z: z0 + r * tileSize, dark: (r + c) % 2 === 0 });
+      }
+    }
+    return { arr, tileSize };
+  }, [w, d]);
+
   return (
     <group position={[cx, 0, cz]}>
-      {/* Floor tint — accent-tinted patch inside the room */}
-      <mesh position={[0, 0.034, 0]}>
-        <boxGeometry args={[w - 0.3, 0.012, d - 0.3]} />
-        <meshStandardMaterial
-          color="#0b1128"
-          emissive={room.accent}
-          emissiveIntensity={0.12}
-          roughness={0.65}
-          metalness={0.18}
-        />
-      </mesh>
+      {/* Warm tile floor — two alternating tile colours, both tinted
+          slightly with the room accent so each room feels branded. */}
+      <group position={[0, 0.034, 0]}>
+        {tiles.arr.map((t, i) => (
+          <mesh key={i} position={[t.x, 0, t.z]}>
+            <boxGeometry args={[tiles.tileSize * 0.96, 0.012, tiles.tileSize * 0.96]} />
+            <meshStandardMaterial
+              color={t.dark ? '#dfe6ef' : '#f4f6fa'}
+              emissive={room.accent}
+              emissiveIntensity={0.04}
+              roughness={0.4}
+              metalness={0.1}
+            />
+          </mesh>
+        ))}
+      </group>
 
       {/* Accent trim ring on the floor — pulses on proximity/selection */}
       <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -69,8 +91,11 @@ export function Room({ room }: { room: RoomDef }) {
         />
       </mesh>
 
-      {/* Interior point light */}
-      <pointLight color={room.glow} intensity={1.0} distance={Math.max(w, d) * 1.6} position={[0, 1.0, 0]} />
+      {/* Warm interior spotlight — simulates ceiling fixture, casts the
+          main "Pokemon-lab" key light onto the characters + props below. */}
+      <pointLight color="#fff0c0" intensity={1.6} distance={Math.max(w, d) * 1.8} position={[0, 2.1, 0]} castShadow />
+      {/* Accent bounce light — adds the brand tint */}
+      <pointLight color={room.glow} intensity={0.7} distance={Math.max(w, d) * 1.5} position={[0, 1.1, 0]} />
 
       {/* Floor decal — room codename, tinted */}
       <mesh position={[0, 0.055, d / 2 - 1.0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -104,19 +129,29 @@ export function Room({ room }: { room: RoomDef }) {
       <RoomInterior room={room} />
 
       {/* NPC agents */}
-      {Array.from({ length: room.agentCount }).map((_, i) => (
-        <NPCAgent
-          key={`${room.id}-npc-${i}`}
-          accent={room.accent}
-          waypoints={[
-            waypoints[(0 + i) % 4],
-            waypoints[(1 + i) % 4],
-            waypoints[(2 + i) % 4],
-            waypoints[(3 + i) % 4],
-          ]}
-          seed={i * 71}
-        />
-      ))}
+      {Array.from({ length: room.agentCount }).map((_, i) => {
+        const callsigns = ['oracle', 'scout', 'keeper', 'analyst', 'forge', 'warden', 'herald', 'sentry'];
+        const callsign = `${room.id}-${callsigns[i % callsigns.length]}-${String(i + 1).padStart(2, '0')}`;
+        const role = room.promptLabel;
+        return (
+          <NPCAgent
+            key={`${room.id}-npc-${i}`}
+            accent={room.accent}
+            roomId={room.id}
+            roomName={room.name}
+            index={i}
+            callsign={callsign}
+            role={role}
+            waypoints={[
+              waypoints[(0 + i) % 4],
+              waypoints[(1 + i) % 4],
+              waypoints[(2 + i) % 4],
+              waypoints[(3 + i) % 4],
+            ]}
+            seed={i * 71 + 13}
+          />
+        );
+      })}
 
       {/* Floating room name label above the rooftop (rooms share cornice,
           so we keep the label just above it) */}
