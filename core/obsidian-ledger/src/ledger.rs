@@ -246,7 +246,8 @@ impl Ledger for RocksLedger {
             .cf_handle(CF_ENTRIES)
             .ok_or_else(|| LedgerError::Metadata("entries CF not found".into()))?;
         let mut out: Vec<Result<LedgerEntry>> = Vec::new();
-        let mode = IteratorMode::From(&from_sequence.to_be_bytes(), rocksdb::Direction::Forward);
+        let from_key = from_sequence.to_be_bytes();
+        let mode = IteratorMode::From(&from_key, rocksdb::Direction::Forward);
         for item in self.db.iterator_cf(cf, mode) {
             let (k, v) = item?;
             let seq = u64_from_be_slice(&k).unwrap_or(u64::MAX);
