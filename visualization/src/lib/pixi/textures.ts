@@ -17,11 +17,7 @@ export function softGlowTexture(app: Application, size = 64): Texture {
     const alpha = Math.pow(1 - t, 2);
     g.circle(r, r, t * r).fill({ color: 0xffffff, alpha: alpha * 0.6 });
   }
-  return app.renderer.generateTexture({
-    target: g,
-    frame: { x: 0, y: 0, width: size, height: size },
-    resolution: 2,
-  });
+  return app.renderer.generateTexture({ target: g, resolution: 2 });
 }
 
 /** Four-ray lens flare star, white, 96×96. */
@@ -51,11 +47,7 @@ export function lensFlareTexture(app: Application, size = 96): Texture {
   ray(-Math.PI / 4, c * 0.7, 0.7);
   ray((3 * Math.PI) / 4, c * 0.7, 0.7);
   ray(-(3 * Math.PI) / 4, c * 0.7, 0.7);
-  return app.renderer.generateTexture({
-    target: g,
-    frame: { x: 0, y: 0, width: size, height: size },
-    resolution: 2,
-  });
+  return app.renderer.generateTexture({ target: g, resolution: 2 });
 }
 
 /** Small particle texture for trails / dust / rain. */

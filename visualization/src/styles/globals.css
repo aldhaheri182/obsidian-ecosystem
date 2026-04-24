@@ -67,8 +67,7 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Custom cursor system — the default cursor is hidden. */
-  cursor: none;
+  /* Native cursor. Custom cursor system removed — see cursor/cursor.ts. */
 }
 
 /* Respect small viewports but don't apologize for being a desktop app. */

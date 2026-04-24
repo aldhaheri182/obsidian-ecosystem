@@ -15,13 +15,12 @@ services:
 
   nats:
     image: nats:2.11-alpine
+    # All server config (port, http_port, jetstream with store_dir, and
+    # websocket gateway on 8080) lives in the mounted conf file. CLI is
+    # minimal to avoid "duplicate config" errors from NATS.
     command:
-      - "--jetstream"
-      - "--store_dir=/data/jetstream"
-      - "--http_port=8222"
-      - "--port=4222"
-      - "-m"
-      - "8222"
+      - "-c"
+      - "/etc/nats/nats-server.conf"
     ports:
       - "14222:4222"      # client
       - "18222:8222"      # monitoring / healthcheck
