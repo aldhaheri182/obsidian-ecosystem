@@ -1,0 +1,32 @@
+# ============================================================================
+# core/obsidian-graph/pyproject.toml
+# Authorized by: M1 plan §"Memory Fabric" + whitepaper §5.3 (Knowledge Graph).
+# The Knowledge Graph API package. Wraps Neo4j + Qdrant + the Immutable Ledger
+# behind a single unified read/write interface consumed by every agent.
+# ============================================================================
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obsidian-graph"
+version = "0.1.0"
+description = "Knowledge Graph + Vector Store + Ledger unified API for Mnemosyne."
+requires-python = ">=3.12"
+dependencies = [
+    "neo4j>=5.22,<6",
+    "qdrant-client>=1.11,<2",
+    "pydantic>=2.9,<3",
+    "asyncpg>=0.30,<1",
+    "boto3>=1.35,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+]
+
+[tool.setuptools.packages.find]
+include = ["obsidian_graph*"]

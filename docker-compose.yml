@@ -210,6 +210,107 @@ services:
         limits:
           memory: 256m
 
+  # ---------- M1 Memory Fabric (issue #22) ----------
+
+  postgres:
+    # PostgreSQL 16 + TimescaleDB 2.16 per whitepaper §15.3. Houses the
+    # relational + time-series side of the Memory Fabric. Apache AGE (the
+    # Postgres-native graph option) is a fallback documented in §5; primary
+    # graph store for M1 is Neo4j (below).
+    image: timescale/timescaledb:2.16.1-pg16
+    environment:
+      POSTGRES_DB: obsidian
+      POSTGRES_USER: obsidian
+      POSTGRES_PASSWORD: obsidian
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U obsidian -d obsidian"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  neo4j:
+    # Neo4j 5.22 Community. Primary Knowledge Graph store for M1 per
+    # whitepaper §5.3. Apache AGE above is the fallback / portability option.
+    image: neo4j:5.22-community
+    environment:
+      NEO4J_AUTH: neo4j/obsidian-m1
+      NEO4J_server_memory_heap_initial__size: "512m"
+      NEO4J_server_memory_heap_max__size: "512m"
+      NEO4J_server_memory_pagecache_size: "256m"
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+    ports:
+      - "17474:7474"  # HTTP
+      - "17687:7687"  # Bolt
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1500m
+
+  qdrant:
+    # Qdrant 1.11 vector store per whitepaper §5 — holds embeddings of
+    # reflections, news, and agent memory nodes.
+    image: qdrant/qdrant:v1.11.5
+    ports:
+      - "16333:6333"  # HTTP
+      - "16334:6334"  # gRPC
+    volumes:
+      - qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ': > /dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  minio:
+    # MinIO S3-compatible blob store. For dev use; production uses real S3.
+    # Stores: ledger-snapshot archival (daily), model checkpoints, replay
+    # artifacts, board meeting minutes PDFs, dream-session recordings.
+    image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: obsidian
+      MINIO_ROOT_PASSWORD: obsidian-minio
+    ports:
+      - "19001:9000"  # S3 API
+      - "19002:9001"  # web console
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || curl -sf http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
 volumes:
   nats-data:
   clickhouse-data:
+  postgres-data:
+  neo4j-data:
+  neo4j-logs:
+  qdrant-data:
+  minio-data:
