@@ -53,7 +53,7 @@ async def _main() -> None:
         data_root=Path(os.environ.get("LEDGER_PATH", "/data/ledger")),
         nats_url=os.environ.get("NATS_URL", "nats://nats:4222"),
     )
-    supervisor = Supervisor(cfg, [spec])
+    supervisor = Supervisor(cfg).register(spec)
 
     # Run supervisor + archival loop concurrently.
     await asyncio.gather(

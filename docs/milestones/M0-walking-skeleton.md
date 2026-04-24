@@ -1,6 +1,6 @@
 # Milestone 0 — Walking Skeleton
 
-**Status:** Active.
+**Status:** CLOSED — code-frozen 2026-04-24 (see "Completed" section below).
 **Target duration:** 2 weeks of focused work.
 **Parent spec:** `docs/specification.md` (the maximal architectural specification).
 
